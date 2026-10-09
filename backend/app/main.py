@@ -209,7 +209,7 @@ def monthly_stats(
 ) -> dict[str, Any]:
     """汇总指定月份的训练指标，供首页月度卡片使用。"""
     _assert_ready()
-    rows = [row for row in _activities() if row["date"] and row["date"].startswith(month)]
+    rows = [row for row in _activities() if row["date"] and row["date"].startswith(month) and not row.get("training_excluded", False)]
     total_distance = sum(row["distance_m"] or 0 for row in rows)
     total_elapsed = sum(row["elapsed_s"] or 0 for row in rows)
     active_days = len({row["date"] for row in rows})
@@ -242,7 +242,8 @@ def range_stats(
         raise HTTPException(status_code=422, detail="单次统计范围不能超过三年。")
 
     history_start = start_date - timedelta(days=27)
-    rows = [row for row in _activities() if row.get("date") and history_start.isoformat() <= row["date"] <= end]
+    rows = [row for row in _activities() if row.get("date") and history_start.isoformat() <= row["date"] <= end
+            and row.get("sport") == "running" and not row.get("training_excluded", False)]
     by_day: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         by_day[row["date"]].append(row)
@@ -313,7 +314,7 @@ def range_stats(
         },
         "daily": visible,
         "weekly": weekly,
-        "load_note": "相对负荷基于训练时长和平均心率构建，仅用于观察个人训练变化。",
+        "load_note": "仅统计正式跑步；相对负荷基于时长与平均心率，不是 COROS 负荷。混合／排除活动与其他运动保留在活动列表。",
     }
 
 

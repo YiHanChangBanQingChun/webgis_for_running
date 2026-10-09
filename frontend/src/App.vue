@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { fetchAllActivities } from './activityApi'
 import DistanceTrend from './components/DistanceTrend.vue'
 import ActivityExplorer from './components/ActivityExplorer.vue'
 import ActivityDetailModal from './components/ActivityDetailModal.vue'
@@ -164,10 +165,7 @@ async function openDay(cell: CalendarCell): Promise<void> {
   dayLoading.value = true
   dayActivities.value = []
   try {
-    const response = await fetch(`/api/activities?start=${cell.date}&end=${cell.date}&limit=576`)
-    if (!response.ok) throw new Error('Day activities unavailable')
-    const result = await response.json() as { items: Activity[] }
-    dayActivities.value = result.items
+    dayActivities.value = await fetchAllActivities<Activity>({ start: cell.date, end: cell.date })
   } catch {
     ElMessage.error('无法读取当天活动，请检查后端服务。')
   } finally {
@@ -179,14 +177,13 @@ async function loadDashboard(): Promise<void> {
   loading.value = true
   apiError.value = false
   try {
-    const [activitiesResponse, calendarResponse, reportResponse] = await Promise.all([
-      fetch('/api/activities?limit=576'),
+    const [activityData, calendarResponse, reportResponse] = await Promise.all([
+      fetchAllActivities<Activity>(),
       fetch('/api/calendar'),
       fetch('/api/quality-report'),
     ])
-    if (!activitiesResponse.ok || !calendarResponse.ok || !reportResponse.ok) throw new Error('API unavailable')
-    const activityData = await activitiesResponse.json() as { items: Activity[] }
-    activities.value = activityData.items
+    if (!calendarResponse.ok || !reportResponse.ok) throw new Error('API unavailable')
+    activities.value = activityData
     calendar.value = await calendarResponse.json() as CalendarRow[]
     report.value = await reportResponse.json() as QualityReport
     const latestDate = calendar.value.at(-1)?.date
@@ -194,7 +191,7 @@ async function loadDashboard(): Promise<void> {
     await loadMonthlyStats()
   } catch {
     apiError.value = true
-    ElMessage.info('FastAPI 尚未连接，当前显示页面框架。')
+    ElMessage.info('后端尚未连接，当前显示页面框架。')
   } finally {
     loading.value = false
   }

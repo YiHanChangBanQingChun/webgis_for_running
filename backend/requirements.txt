@@ -1,10 +1,7 @@
-fastapi==0.141.1
-uvicorn==0.52.1
+-r requirements-core.txt
 pandas==3.0.5
 geopandas==1.1.4
 pyogrio==0.13.0
 shapely==2.1.2
 pyproj==3.7.2
-fitparse==1.2.0
-fitdecode==0.11.0
 matplotlib==3.10.3

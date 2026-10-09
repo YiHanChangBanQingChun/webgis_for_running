@@ -1,5 +1,8 @@
 # 🏃 强风吹拂 · Running WebGIS
 
+> **2026-10-09 macOS迁移已完成。** Finder双击 `start_development.command` 启动FastAPI＋前端，或 `start_development_springboot.command` 启动Spring Boot＋前端。首次环境配置用 `./setup_macos.sh`，新数据导入用 `./import_data.sh`。完整流程、目录逻辑、备份回滚与训练数据口径见 [macOS迁移说明](docs/macos-migration.md)，本次训练简评见 [10月训练复盘](docs/2026-10-09-training-review.md)。下文Windows示例保留为历史用法。
+
+
 一个面向个人跑步数据的开源 WebGIS 可视化项目。它将运动手表导出的 FIT 文件整理为可查询的活动摘要、轨迹 GeoJSON 和分析指标，并通过地图、日历和交互式图表帮助跑者理解自己的训练。
 
 > 项目名称取自《强风吹拂》。当前版本以本地单用户使用为主，不依赖数据库，适合作为 GIS、Web 开发、运动数据分析和个人量化项目的学习参考。

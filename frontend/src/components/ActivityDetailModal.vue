@@ -12,6 +12,8 @@ interface Activity {
   average_heart_rate: number | null
   average_pace_s_per_km: number | null
   has_gps: boolean
+  user_note?: string
+  training_excluded?: boolean
 }
 interface ChartPoint { x: number; y: number | null; distanceKm: number }
 interface ZoneBand { label: string; shortLabel: string; min?: number; max?: number; color: string }
@@ -240,6 +242,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
           <div class="detail-content" v-loading="loading">
             <section class="fixed-overview" :class="{ 'metrics-expanded': visibleSummaryMetrics.length > 2 }" :style="{ '--summary-width': summaryPanelWidth }">
               <div class="fixed-stats">
+                <p v-if="activity?.user_note" class="activity-user-note">{{ activity.user_note }}</p>
                 <p class="eyebrow">ACTIVITY SUMMARY</p><h2>{{ activity?.date }}<br><em>{{ activity?.sport || 'Training' }}</em></h2>
                 <div class="primary-metric"><strong>{{ formatKm(activity?.distance_m ?? null) }}</strong><span>距离</span></div>
                 <div class="secondary-metrics"><div><strong>{{ formatPace(activity?.average_pace_s_per_km ?? null) }}</strong><span>平均配速</span></div><div><strong>{{ activity?.average_heart_rate ? `${activity.average_heart_rate} bpm` : '—' }}</strong><span>平均心率</span></div><div v-for="metric in visibleSummaryMetrics" :key="metric.id"><strong>{{ metric.value!.toFixed(metric.digits) }} {{ metric.unit }}</strong><span>{{ metric.label }}</span></div></div>
@@ -330,4 +333,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
   .fixed-overview.metrics-expanded .secondary-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
   .fullscreen .fixed-overview{height:auto}
 }
+</style>
+
+<style scoped>
+.activity-user-note { padding: .7rem; border-radius: .5rem; background: rgba(255,160,60,.12); font-size: .75rem; line-height: 1.6; }
 </style>

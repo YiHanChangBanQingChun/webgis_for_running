@@ -38,7 +38,7 @@ public class StatisticsService {
         final YearMonth month;
         try { month = YearMonth.parse(text); } catch (DateTimeParseException e) { throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "month 必须使用 YYYY-MM 格式。"); }
         List<JsonNode> rows = new ArrayList<>();
-        for (JsonNode row : repository.activities()) { String d = JsonValues.text(row, "date"); if (d != null && d.startsWith(month.toString())) rows.add(row); }
+        for (JsonNode row : repository.activities()) { String d = JsonValues.text(row, "date"); if (d != null && d.startsWith(month.toString()) && !row.path("training_excluded").asBoolean(false)) rows.add(row); }
         double distance = sum(rows, "distance_m"), elapsed = sum(rows, "elapsed_s");
         Set<String> days = new LinkedHashSet<>(); Map<String, Integer> sports = new TreeMap<>();
         for (JsonNode row : rows) { days.add(JsonValues.text(row, "date")); String sport = JsonValues.text(row, "sport"); sports.merge(sport == null ? "unknown" : sport, 1, Integer::sum); }
@@ -55,6 +55,7 @@ public class StatisticsService {
         if (ChronoUnit.DAYS.between(start, end) > 1095) throw new ApiException(HttpStatus.UNPROCESSABLE_ENTITY, "单次统计范围不能超过三年。");
         LocalDate historyStart = start.minusDays(27); Map<LocalDate, List<JsonNode>> byDay = new LinkedHashMap<>(); List<JsonNode> history = new ArrayList<>();
         for (JsonNode row : repository.activities()) {
+            if (!"running".equals(JsonValues.text(row, "sport")) || row.path("training_excluded").asBoolean(false)) continue;
             String text = JsonValues.text(row, "date"); if (text == null) continue; LocalDate date = LocalDate.parse(text);
             if (!date.isBefore(historyStart) && !date.isAfter(end)) { history.add(row); byDay.computeIfAbsent(date, ignored -> new ArrayList<>()).add(row); }
         }
@@ -76,7 +77,7 @@ public class StatisticsService {
         summary.put("total_ascent_m", round(sum(selected, "total_ascent_m"))); summary.put("calories", round(sum(selected, "calories")));
         put(summary, "average_pace_s_per_km", distance == 0 ? null : elapsed / distance * 1000); put(summary, "average_distance_m", days.isEmpty() ? null : distance / days.size()); put(summary, "load_ratio", ratio); summary.put("load_status", status(ratio));
         ArrayNode dayArray = result.putArray("daily"); visible.forEach(d -> dayArray.add(d.json())); ArrayNode weekArray = result.putArray("weekly"); weekly.values().forEach(w -> weekArray.add(w.json()));
-        result.put("load_note", "相对负荷基于训练时长和平均心率构建，仅用于观察个人训练变化。"); return result;
+        result.put("load_note", "仅统计正式跑步；相对负荷基于时长与平均心率，不是 COROS 负荷。混合／排除活动与其他运动保留在活动列表。"); return result;
     }
 
     private double sum(List<JsonNode> rows, String field) { return rows.stream().mapToDouble(r -> JsonValues.number(r, field)).sum(); }

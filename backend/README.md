@@ -2,7 +2,7 @@
 
 ## 数据层次
 
-- `data/running/exportfrom20260806/`：原始 FIT；脚本只读，绝不移动、删除或覆盖。
+- `data/newdata*/export*/`：优先选择最新已解压完整导出；没有新导出时回退旧 `data/running/exportfrom20260806/`。原始 FIT 只读。
 - `data/processed/activities/<id>.full.json`：所有可由 `fitparse` 识别的 FIT 消息、字段元信息、源文件 SHA-256 和解析状态。
 - `data/processed/activities.json`、`calendar.json`、`tracks/<id>.geojson`：由完整归档生成的页面数据，可随时删除后重建。
 
@@ -88,3 +88,7 @@ python backend\scripts\diagnose_fit.py data\running\exportfrom20260806\458572979
 ```
 
 该工具只读 FIT，并在 `data/processed/diagnostics/` 写入报告。报告会检查 FIT 头中声明的数据长度是否与文件实际长度匹配，并分别使用 `fitparse` 和 `fitdecode` 尝试读取，记录两者能恢复的消息类型和逐点记录数量。若备用解析器能读取更多 `record`，下一步可将它作为指定文件的恢复解析器；若两者都在同一位置失败，通常说明导出文件在该处截断或含有设备私有字段错误。
+
+## macOS推荐入口
+
+项目根目录运行 `./setup_macos.sh`、`./import_data.sh`、`./start_development.sh`。最小运行依赖为requirements-core.txt；画图/高级GIS研究需要时再安装requirements.txt。refresh_data.py在暂存目录重建并通过质量检查后替换processed，旧数据自动保存为processed-backup-*；update_training.py先备份，再导入兄弟目录training_database。详见../docs/macos-migration.md。
