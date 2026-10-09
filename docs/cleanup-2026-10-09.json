@@ -1,0 +1,86 @@
+{
+  "date_cn": "2026-10-09",
+  "moved": [
+    {
+      "from": ".coros-mcp",
+      "to": "archive/windows-workspace/.coros-mcp"
+    },
+    {
+      "from": ".npm-global",
+      "to": "archive/windows-workspace/.npm-global"
+    },
+    {
+      "from": ".pydeps",
+      "to": "archive/windows-workspace/.pydeps"
+    },
+    {
+      "from": ".github",
+      "to": "archive/windows-workspace/.github"
+    },
+    {
+      "from": "COROS_MCP_使用说明.md",
+      "to": "archive/windows-workspace/COROS_MCP_使用说明.md"
+    },
+    {
+      "from": "webgis_for_running/README.md",
+      "to": "webgis_for_running/docs/history/README-windows.md"
+    },
+    {
+      "from": "webgis_for_running/SpringBoot后端从零搭建与迁移指南.md",
+      "to": "webgis_for_running/docs/history/SpringBoot后端从零搭建与迁移指南.md"
+    },
+    {
+      "from": "webgis_for_running/项目规划与功能设计.md",
+      "to": "webgis_for_running/docs/history/项目规划与功能设计.md"
+    },
+    {
+      "from": "webgis_for_running/start_backend_api.bat",
+      "to": "webgis_for_running/archive/windows/start_backend_api.bat"
+    },
+    {
+      "from": "webgis_for_running/start_development.bat",
+      "to": "webgis_for_running/archive/windows/start_development.bat"
+    },
+    {
+      "from": "webgis_for_running/start_development_springboot.bat",
+      "to": "webgis_for_running/archive/windows/start_development_springboot.bat"
+    },
+    {
+      "from": "webgis_for_running/start_frontend.bat",
+      "to": "webgis_for_running/archive/windows/start_frontend.bat"
+    },
+    {
+      "from": "webgis_for_running/start_frontend_springboot.bat",
+      "to": "webgis_for_running/archive/windows/start_frontend_springboot.bat"
+    },
+    {
+      "from": "webgis_for_running/start_springboot_api.bat",
+      "to": "webgis_for_running/archive/windows/start_springboot_api.bat"
+    }
+  ],
+  "removed_regenerable": [
+    ".npm-cache",
+    "webgis_for_running/frontend/dist",
+    "webgis_for_running/frontend/src/components/HelloWorld.vue",
+    "webgis_for_running/frontend/src/assets/vue.svg",
+    "webgis_for_running/frontend/src/assets/hero.png",
+    "webgis_for_running/frontend/src/assets/vite.svg",
+    ".DS_Store",
+    "training_database/__pycache__",
+    "archive/windows-workspace/.pydeps/fitparse/__pycache__",
+    "webgis_for_running/.DS_Store",
+    "webgis_for_running/backend/app/__pycache__",
+    "webgis_for_running/backend/tests/__pycache__",
+    "webgis_for_running/backend/scripts/__pycache__",
+    "webgis_for_running/data/.DS_Store",
+    "webgis_for_running/data/newdata20261009/.DS_Store"
+  ],
+  "removed_bytes": 190731618,
+  "retained": [
+    "all raw FIT and ZIP exports",
+    "training SQLite and raw snapshots",
+    "all training backups",
+    "data/processed and previous processed backup",
+    "active macOS dependencies"
+  ]
+}

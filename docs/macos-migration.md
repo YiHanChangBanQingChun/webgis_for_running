@@ -8,8 +8,8 @@
 |---|---|---|
 | training_database | SQLite训练跟踪、COROS原始快照、用户报告、计划、评价、目标 | 先读AGENTS/CONTEXT/README，备份后更新；不同来源分表，计划不算完成 |
 | coros_exports | 早期COROS导出资料 | 保留作来源，不自动联网同步 |
-| .coros-mcp | Windows下COROS连接包装器 | 保留历史；本次使用本地FIT，未读取凭证或移植授权状态 |
-| .npm-cache、.npm-global、.pydeps | Windows依赖/缓存 | 不用于macOS运行，使用本项目.venv及npm ci |
+| ../archive/windows-workspace/.coros-mcp | 旧COROS连接包装器 | 2026-10-09整理时归档，当前本地FIT流程不使用 |
+| ../archive/windows-workspace/.npm-global、.pydeps | 旧依赖副本 | 已归档；旧.npm-cache已清理，当前使用.venv及npm ci |
 | webgis_for_running/backend/app | FIT全量归档、活动/日历/轨迹派生、FastAPI只读服务 | 路径从脚本位置解析，支持环境变量和暂存目录 |
 | backend/scripts | 解析、质量报告、250m探索网格、诊断、画图 | 新增refresh_data.py完整导出导入及update_training.py入库 |
 | backend_springboot/api | Spring Boot只读API，复用Python派生数据 | Java目标21；Maven Wrapper，不依赖全局mvn |
@@ -19,7 +19,7 @@
 | data/processed | 页面与API实际读取的数据 | 完整导出在暂存目录重建，质量通过才替换 |
 | data/processed-backup-* | 上一版完整派生数据 | 可恢复；不提交Git |
 | data/activity-overrides.json | 经用户确认的混合/排除活动说明 | 提交规则；不覆盖原始FIT |
-| tools/training | 可提交的训练跟踪脚本与测试 | 与父目录训练工具同版，默认读取兄弟training_database |
+| tools/training | 训练跟踪唯一源码与测试 | 父目录训练工具为兼容入口，数据默认读取兄弟training_database |
 
 处理链：原FIT → 全消息归档（含SHA-256与字段元信息）→ 活动索引/日历/GeoJSON → 质量报告/空间网格 → FastAPI或Spring Boot → Vite页面。API不在页面请求时解析FIT。训练SQLite是另一条链，保存COROS原始响应、FIT观测和journal，按ID去重汇总。
 
@@ -83,4 +83,8 @@ python3 -m unittest discover -s tools/training -v
 python3 tools/training/track_training.py verify
 ```
 
-SQLite、原始FIT、GPS全量轨迹与依赖缓存不提交Git。可重建的导入代码、macOS工具、排除规则、测试及本次训练复盘提交到WebGIS仓库。训练主库位于仓库外的兄弟目录，保留本机原位置；训练脚本源码副本随仓库提交。
+SQLite、原始FIT、GPS全量轨迹与依赖缓存不提交Git。可重建的导入代码、macOS工具、排除规则、测试及本次训练复盘提交到WebGIS仓库。训练主库位于仓库外的兄弟目录，保留本机原位置；训练脚本唯一源码随仓库提交，兄弟目录保留兼容入口。
+
+## 后续目录整理
+
+2026-10-09已将原Windows启动器移至archive/windows，旧说明及学习方案移至docs/history。根README现在只描述当前用法；训练源码统一在tools/training，兄弟training_database保留兼容入口。详情见[整理记录](cleanup-2026-10-09.md)。
