@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import RangeAnalysisChart from './RangeAnalysisChart.vue'
 
+// interface = 前端开发者与数据之间的“约定”
 interface DailyPoint { date: string; activity_count: number; distance_m: number; elapsed_s: number; relative_load: number; load_7d: number; load_28d: number; load_ratio: number | null }
 interface WeeklyPoint { week: string; activity_count: number; distance_m: number; elapsed_s: number; relative_load: number }
 interface RangeResult {
