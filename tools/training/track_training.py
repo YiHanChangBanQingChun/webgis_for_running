@@ -369,9 +369,10 @@ def build(connection):
 
 def summary(connection,write=False):
     stats={t:connection.execute(f'SELECT count(*) FROM {t}').fetchone()[0] for t in ['activities','laps','fit_archive','fit_observations','journal','goals','daily_metrics','threshold_snapshots','raw_snapshots']}
+    health_date=connection.execute('SELECT max(date_cn) FROM daily_metrics').fetchone()[0] or '未知'
     lines=['# 训练数据库摘要','','日期统一以Asia/Shanghai理解；FIT缺失时区记录保留不确定性。',
            '未执行计划不会算作完成；无跑步记录不等于休息。',
-           'COROS 与 FIT 按活动 ID 去重合并；FIT 原始观测单独保存。未知负荷显示 —，不当作零；排除 9/16 休闲跑及 10/2 骑车混入记录。健康指标仍截至 2026-10-01。','',f'表记录数：{json.dumps(stats,ensure_ascii=False)}','',
+           f'COROS 与 FIT 按活动 ID 去重合并；FIT 原始观测单独保存。未知负荷显示 —，不当作零；排除 9/16 休闲跑及 10/2 骑车混入记录。健康指标截至 {health_date}。','',f'表记录数：{json.dumps(stats,ensure_ascii=False)}','',
            '## 周跑量（周一至周日，COROS＋明确时区 FIT，边界周可能不完整）','',
            '| 周一 | 跑步日 | 跑量km | 时间h | 已知负荷 |','|---|---:|---:|---:|---:|']
     for r in connection.execute('SELECT * FROM weekly_observed_training ORDER BY week_monday DESC'):
@@ -382,7 +383,8 @@ def summary(connection,write=False):
         lines.append(f"| {r['date_cn']} | {r['location_label']} | {r['distance_km']:.2f} | {fmt_pace(r['pace_s_km'])} | {fmt_value(r['avg_hr'])} | {fmt_value(r['training_load'])} | {r['coros_focus'] or r['source']} |")
     lines+=['','## 最新恢复/能力观测','']
     for table,order in [('fitness_snapshots','date_cn'),('daily_metrics','date_cn'),('recovery_snapshots','observed_date_cn')]:
-        row=connection.execute(f'SELECT * FROM {table} ORDER BY {order} DESC LIMIT 1').fetchone()
+        tie_order=', snapshot_id DESC' if table.endswith('_snapshots') else ''
+        row=connection.execute(f'SELECT * FROM {table} ORDER BY {order} DESC{tie_order} LIMIT 1').fetchone()
         if row: lines.append(f'- {table}: {json.dumps(dict(row),ensure_ascii=False)}')
     text='\n'.join(lines)+'\n'
     if write:
