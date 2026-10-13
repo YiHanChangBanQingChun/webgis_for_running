@@ -281,7 +281,14 @@ def range_stats(
 
     # 7 日负荷用于观察短期训练量，28 日负荷用于建立较长周期基线。
     loads = [item["relative_load"] for item in daily]
+    # daily 形如：
+    # daily = [
+    # {"date": "10-01", "relative_load": 10},
+    # {"date": "10-02", "relative_load": 20},
+    # {"date": "10-03", "relative_load": 30},
+    # ]
     for index, item in enumerate(daily):
+        # 根据当前日期的位置 index，从 loads 列表中截取最近 7 天（前 6 天加当天）的负荷数据，求和并保留两位小数，然后保存为当前日期的 load_7d。
         item["load_7d"] = round(sum(loads[max(0, index - 6):index + 1]), 2)
         load_28d = sum(loads[max(0, index - 27):index + 1])
         item["load_28d"] = round(load_28d, 2)

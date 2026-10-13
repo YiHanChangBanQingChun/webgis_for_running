@@ -55,6 +55,7 @@ async function load(): Promise<void> {
     const query = new URLSearchParams({ start: dates.value[0], end: dates.value[1] })
     const response = await fetch(`/api/stats/range?${query}`)
     if (!response.ok) throw new Error('range stats unavailable')
+    // 将后端返回的 JSON 数据转换为 RangeResult 类型，并赋值给 result.value。在运行时不检查数据。
     result.value = await response.json() as RangeResult
   } catch { ElMessage.error('训练分析读取失败，请确认 FastAPI 已更新并正常运行。') }
   finally { loading.value = false }
