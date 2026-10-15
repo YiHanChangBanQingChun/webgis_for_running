@@ -7,9 +7,10 @@ import ActivityExplorer from './components/ActivityExplorer.vue'
 import ActivityDetailModal from './components/ActivityDetailModal.vue'
 import TrainingAnalysis from './components/TrainingAnalysis.vue'
 import MapExplorer from './components/MapExplorer.vue'
+import RegionExplorer from './components/RegionExplorer.vue'
 
 type ThemePreference = 'system' | 'light' | 'dark'
-type View = 'overview' | 'activities' | 'analysis' | 'map'
+type View = 'overview' | 'activities' | 'analysis' | 'map' | 'region'
 
 interface Activity {
   id: string
@@ -141,7 +142,7 @@ const monthLabel = computed(() => {
 })
 const viewTitle = computed(
   () =>
-    ({ overview: '训练总览', activities: '活动记录', analysis: '训练分析', map: '地图探索' })[
+    ({ overview: '训练总览', activities: '活动记录', analysis: '训练分析', map: '地图探索', region: '区域探索' })[
       activeView.value
     ],
 )
@@ -303,6 +304,10 @@ watch(selectedMonth, loadMonthlyStats)
         <button :class="{ active: activeView === 'map' }" @click="chooseView('map')">
           <span>⌖</span>
           地图探索
+        </button>
+        <button :class="{ active: activeView === 'region' }" @click="chooseView('region')">
+          <span>🗺️</span>
+          区域探索
         </button>
       </nav>
       <div class="sidebar-status">
@@ -505,6 +510,10 @@ watch(selectedMonth, loadMonthlyStats)
           :dark="resolvedTheme === 'dark'"
           :start-date="report?.data_coverage.date_range.start"
           :end-date="report?.data_coverage.date_range.end"
+        />
+        <RegionExplorer
+          v-else-if="activeView === 'region'"
+          :dark="resolvedTheme === 'dark'"
         />
         <el-alert
           v-if="apiError"

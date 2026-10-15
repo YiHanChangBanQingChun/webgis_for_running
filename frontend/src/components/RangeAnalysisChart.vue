@@ -25,6 +25,7 @@ const container = ref<HTMLElement>()
 let chart: echarts.ECharts | undefined
 
 function palette() {
+  // 主题色
   return {
     text: props.dark ? '#9ca9bd' : '#738096',
     line: props.dark ? '#2c3648' : '#e4e9f0',
@@ -32,6 +33,7 @@ function palette() {
   }
 }
 function render(): void {
+  // 如果容器不存在，直接返回
   if (!container.value) return
   chart ??= echarts.init(container.value)
   const colors = palette()
@@ -77,6 +79,7 @@ function render(): void {
             name: '周里程',
             type: 'bar',
             barMaxWidth: 28,
+            // tofixed(1) 保留一位小数，+ 转为数字类型
             data: props.weekly.map((item) => +(item.distance_m / 1000).toFixed(1)),
             itemStyle: { color: '#ff6b35', borderRadius: [6, 6, 2, 2] },
             emphasis: { itemStyle: { color: '#ff8c61' } },
