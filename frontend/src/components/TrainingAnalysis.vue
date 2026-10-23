@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 训练分析页负责选择统计范围，并把接口结果交给指标卡和图表组件。
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import RangeAnalysisChart from './RangeAnalysisChart.vue'
@@ -41,6 +42,7 @@ interface RangeResult {
   load_note: string
 }
 const props = defineProps<{ dark: boolean; latestDate?: string | null }>()
+// 选择的日期范围和接口结果都是响应式状态。
 const loading = ref(false)
 const preset = ref(90)
 const result = ref<RangeResult | null>(null)
@@ -52,6 +54,7 @@ function shiftDate(value: string, days: number): string {
   return date.toISOString().slice(0, 10)
 }
 function usePreset(days: number): void {
+  // 以最新活动日期为结束点，计算最近 N 天的起止日期。
   preset.value = days
   const end = props.latestDate || new Date().toISOString().slice(0, 10)
   dates.value = [shiftDate(end, -(days - 1)), end]
@@ -71,6 +74,7 @@ function formatPace(value?: number | null): string {
   return `${Math.floor(value / 60)}′${String(Math.round(value % 60)).padStart(2, '0')}″`
 }
 const loadMessage = computed(() => {
+  // 将后端的负荷状态转换为用户更容易理解的提示文案。
   const status = result.value?.summary.load_status
   const messages: Record<string, { title: string; text: string; tone: string }> = {
     recovery: {
@@ -126,10 +130,12 @@ watch(
     if (value && !dates.value[1]) usePreset(90)
   },
 )
+// 默认进入页面时显示最近 90 天。
 onMounted(() => usePreset(90))
 </script>
 
 <template>
+  <!-- 页面由范围控制、核心指标、周里程和负荷分析组成。 -->
   <section class="analysis-page" v-loading="loading">
     <div class="analysis-heading">
       <div>

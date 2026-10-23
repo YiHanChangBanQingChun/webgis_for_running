@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 单项运动指标图表：支持配速、心率、步频等曲线，以及缩放和地图位置联动。
 import * as echarts from 'echarts'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
@@ -42,6 +43,7 @@ let renderedPoints: Point[] = []
 let renderedAxisMaximum = 0
 
 const legendItems = computed(() => {
+  // 将区间背景和参考线整理为图例，供模板显示。
   const items = props.zones?.map((zone) => ({ label: zone.shortLabel, color: zone.color })) ?? []
   if (props.referenceLine)
     items.push({ label: props.referenceLine.label, color: props.referenceLine.color })
@@ -93,6 +95,7 @@ function updateYAxisForZoom(startPercent = 0, endPercent = 100): void {
 }
 
 function render(): void {
+  // 根据当前指标、主题和区间配置生成 ECharts 选项。
   if (!container.value) return
   chart ??= echarts.init(container.value)
   const valid = props.points.filter((point) => point.y != null && Number.isFinite(point.y))
@@ -303,6 +306,7 @@ function updateCursor(): void {
 }
 
 const observer = new ResizeObserver(() => chart?.resize())
+// 首次挂载后初始化图表，并观察容器尺寸变化。
 onMounted(async () => {
   await nextTick()
   render()
@@ -321,6 +325,7 @@ watch(
   { deep: true },
 )
 watch(() => props.cursorDistanceKm, updateCursor)
+// 离开详情弹窗时释放图表和尺寸监听器。
 onBeforeUnmount(() => {
   observer.disconnect()
   chart?.dispose()

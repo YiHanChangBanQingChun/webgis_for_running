@@ -1,3 +1,4 @@
+// Cesium 场景适配层：集中封装三维实体、建筑图层、相机和底图操作。
 import * as Cesium from 'cesium'
 import { simplifyForDisplay } from './geometry'
 import { ROUTE_LEGENDS } from './types'
@@ -12,10 +13,12 @@ import type {
 const ROUTE_HEIGHT = 5
 
 function position(point: RoutePoint, height = ROUTE_HEIGHT): Cesium.Cartesian3 {
+  // Cesium 使用经度、纬度和高度创建三维笛卡尔坐标。
   return Cesium.Cartesian3.fromDegrees(point.longitude, point.latitude, height)
 }
 
 function routeColor(point: RoutePoint, mode: RouteColorMode): string {
+  // 根据当前轨迹点的配速或心率，选择对应图例颜色。
   const legend = ROUTE_LEGENDS[mode]
   if (mode === 'plain') return legend[0]!.color
   const value = mode === 'pace' ? point.paceSeconds : point.heartRate
@@ -89,6 +92,7 @@ export class RegionScene {
   }
 
   setRoute(track: PreparedTrack, mode: RouteColorMode): void {
+    // 清空旧路线后按相邻采样点绘制彩色线段。
     this.track = track
     this.routes.entities.removeAll()
     this.trailPoints = simplifyForDisplay(track.points, 350)
@@ -150,6 +154,7 @@ export class RegionScene {
   }
 
   updateRunner(point: RoutePoint, following: boolean): void {
+    // 更新回放标记和已完成轨迹；following 开启时相机跟随运动点。
     if (!this.runner || !this.trail?.polyline) return
     this.runner.position = new Cesium.ConstantPositionProperty(position(point, 9))
     const completed = this.trailPoints.filter((item) => item.elapsedSeconds <= point.elapsedSeconds)
@@ -188,6 +193,7 @@ export class RegionScene {
   }
 
   async setBuildings(records: BuildingRecord[], scale: number, show: boolean): Promise<void> {
+    // GeoJSON 加载是异步的，因此用版本号确保旧请求不会覆盖新场景。
     const version = ++this.buildingVersion
     const data = await Cesium.GeoJsonDataSource.load(
       {

@@ -1,3 +1,4 @@
+// 区域探索 composable：连接界面状态、接口请求、轨迹动画和 Cesium 场景。
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { Ref } from 'vue'
 import { fetchAllActivities } from '../../activityApi'
@@ -30,6 +31,7 @@ export function formatPace(seconds: number | null): string {
  * 使用 shallowRef 保存只读的大数组，避免为数千个坐标创建深层响应式代理。
  */
 export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
+  // 大型轨迹数组使用 shallowRef，避免 Vue 为每个坐标建立深层代理。
   const activities = shallowRef<RunningActivity[]>([])
   const track = shallowRef<PreparedTrack | null>(null)
   const nearbyBuildings = shallowRef<BuildingRecord[]>([])
@@ -123,6 +125,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   }
 
   async function updateCorridor(): Promise<void> {
+    // 半径或轨迹变化后重新筛选附近建筑，并更新三维建筑图层。
     const version = ++corridorVersion
     if (!track.value || !scene) return
     nearbyBuildings.value = filterNearbyBuildings(allBuildings, track.value, radius.value)
@@ -143,6 +146,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   }
 
   async function loadTrack(id: string): Promise<void> {
+    // 切换活动时取消旧请求，清空旧场景，再加载并标准化新轨迹。
     pause()
     trackRequest?.abort()
     trackRequest = new AbortController()
@@ -182,6 +186,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   }
 
   async function loadActivities(): Promise<void> {
+    // 只读取有 GPS 的正式跑步活动，作为左侧选择器的选项。
     loadingActivities.value = true
     activityError.value = ''
     try {
@@ -207,6 +212,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   }
 
   async function loadBuildings(): Promise<void> {
+    // 建筑文件只需加载一次，之后根据轨迹和半径重复筛选。
     buildingError.value = ''
     loadingBuildings.value = true
     try {
@@ -258,6 +264,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     })
   })
 
+  // ResizeObserver 让 Cesium 在面板尺寸变化后重新计算画布大小。
   const observer = new ResizeObserver(() => scene?.resize())
   const pauseWhenHidden = () => {
     if (document.hidden) pause()
@@ -277,6 +284,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
       )
       observer.observe(container.value)
       document.addEventListener('visibilitychange', pauseWhenHidden)
+      // 活动列表和建筑数据互不依赖，可以同时开始加载。
       void loadActivities()
       void loadBuildings()
     } catch (error) {
@@ -286,6 +294,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   })
 
   onBeforeUnmount(() => {
+    // 统一取消请求、动画、监听器和 Cesium，防止页面离开后继续更新状态。
     disposed = true
     corridorVersion += 1
     pause()

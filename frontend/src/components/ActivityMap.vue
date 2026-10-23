@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 活动轨迹地图：加载 GeoJSON 路线，并提供进度拖动和自动回放。
 import L from 'leaflet'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
@@ -14,6 +15,7 @@ interface TrackProperties {
 }
 
 const props = defineProps<{ activityId: string; dark: boolean; focusDistanceKm?: number | null }>()
+// progress 事件把地图当前位置同步给详情弹窗中的其他图表。
 const emit = defineEmits<{ progress: [distanceKm: number] }>()
 const container = ref<HTMLElement>()
 const loading = ref(false)
@@ -30,6 +32,7 @@ let playbackTimer: number | undefined
 
 const sliderMax = computed(() => Math.max(0, routeLength.value - 1))
 const currentMetrics = computed(() => {
+  // 根据当前采样点整理距离、心率、配速和时间，供底部控制条显示。
   const index = Math.min(sliderIndex.value, sliderMax.value)
   const distance = trackSeries.value.distance?.[index]
   const heartRate = trackSeries.value.heart_rate?.[index]
@@ -69,6 +72,7 @@ function togglePlayback(): void {
   }
   if (sliderIndex.value >= sliderMax.value) sliderIndex.value = 0
   playing.value = true
+  // 将整条轨迹控制在约 260 个回放步骤，避免高频更新影响页面流畅度。
   const step = Math.max(1, Math.floor(routeLength.value / 260))
   playbackTimer = window.setInterval(() => {
     if (sliderIndex.value + step >= sliderMax.value) {
@@ -140,6 +144,7 @@ async function renderTrack(): Promise<void> {
     if (coordinates.length < 2) throw new Error('empty track')
     trackSeries.value = feature.properties?.series || {}
     routeLength.value = coordinates.length
+    // 活动切换时先销毁旧地图，再用新路线创建图层。
     map?.remove()
     map = L.map(container.value, { zoomControl: true, attributionControl: true })
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -190,7 +195,9 @@ onMounted(() => {
   renderTrack()
   if (container.value) sizeObserver.observe(container.value)
 })
+// activityId 改变时重新读取对应活动的轨迹。
 watch(() => props.activityId, renderTrack)
+// 滑块变化时移动当前位置，并向父组件报告新的距离。
 watch(sliderIndex, (index) => {
   updateMovingMarker(index)
   const distance = trackSeries.value.distance?.[index]

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 这个无界面组件负责把每日里程数据绘制成 ECharts 折线图。
 import * as echarts from 'echarts'
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
@@ -6,6 +7,7 @@ interface CalendarRow {
   date: string
   distance_m: number
 }
+// 父组件传入数据和当前主题，主题变化时图表颜色也会同步更新。
 const props = defineProps<{ rows: CalendarRow[]; dark: boolean }>()
 const container = ref<HTMLElement>()
 // 图表实例只初始化一次；后续数据或主题变化通过 setOption 更新。
@@ -13,6 +15,7 @@ let chart: echarts.ECharts | undefined
 
 function render(): void {
   if (!container.value) return
+  // ECharts 只创建一次，后续调用 setOption 更新同一个实例。
   chart ??= echarts.init(container.value)
   const rows = props.rows
   chart.setOption(
@@ -57,7 +60,9 @@ onMounted(async () => {
   render()
   if (container.value) observer.observe(container.value)
 })
+// 深度监听数组内容，保证接口刷新后图表立即重绘。
 watch(() => [props.rows, props.dark], render, { deep: true })
+// 组件销毁时释放 ResizeObserver 和 ECharts 实例。
 onBeforeUnmount(() => {
   observer.disconnect()
   chart?.dispose()

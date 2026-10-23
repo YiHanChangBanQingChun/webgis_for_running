@@ -1,9 +1,11 @@
 <script setup lang="ts">
+// 区域探索页面只负责展示控件；数据处理和 Cesium 操作分别放在 composable 与场景类中。
 import { ref } from 'vue'
 import 'cesium/Build/Cesium/Widgets/widgets.css'
 import { formatDuration, formatPace, useRegionExplorer } from '../features/region/useRegionExplorer'
 
 const container = ref<HTMLDivElement>()
+// composable 返回响应式状态和操作函数，模板可以直接绑定它们。
 const {
   activities,
   track,
@@ -40,6 +42,7 @@ const {
 </script>
 
 <template>
+  <!-- 左侧是控制面板，右侧是三维场景和轨迹回放控制条。 -->
   <section class="region-explorer">
     <!-- 控件只绑定状态；请求、筛选和动画在 composable 中，Cesium 调用在场景类中。 -->
     <aside class="region-inspector glass-card">

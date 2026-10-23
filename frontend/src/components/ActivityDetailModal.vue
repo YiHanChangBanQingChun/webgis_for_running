@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 活动详情弹窗：读取单次活动的轨迹指标，并管理图表、分区和个人设置。
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ActivityMap from './ActivityMap.vue'
 import ActivityMetricChart from './ActivityMetricChart.vue'
@@ -78,6 +79,7 @@ interface PersonalZone {
 }
 
 const props = defineProps<{ modelValue: boolean; activity: Activity | null; dark: boolean }>()
+// modelValue 控制弹窗开关，activity 是当前选中的活动，dark 控制子图表主题。
 const emit = defineEmits<{ 'update:modelValue': [value: boolean] }>()
 const fullscreen = ref(false)
 const settingsOpen = ref(false)
@@ -171,6 +173,7 @@ const defaultPersonalZones: PersonalZone[] = [
   },
 ]
 function loadPersonalZones(): PersonalZone[] {
+  // 优先读取用户在当前浏览器保存的训练分区；数据损坏时回退到默认值。
   try {
     const saved = JSON.parse(localStorage.getItem('running-webgis-personal-zones') || 'null') as
       | PersonalZone[]
@@ -232,6 +235,7 @@ function points(
   values: Array<number | null>,
   transform: (value: number) => number = (value) => value,
 ): ChartPoint[] {
+  // 将原始采样数组转换成图表统一点结构，并在数据过多时进行抽样。
   const distances = numeric('distance')
   const timestamps = series.value.timestamp || []
   const firstTimestamp = timestamps.find((value) => typeof value === 'string')
@@ -496,6 +500,7 @@ const summaryPanelWidth = computed(() => {
 })
 
 async function loadTrack(): Promise<void> {
+  // 只有弹窗打开且有活动 ID 时才请求详情数据。
   if (!props.activity?.id || !props.modelValue) return
   loading.value = true
   series.value = {}
@@ -530,6 +535,7 @@ function close(): void {
   emit('update:modelValue', false)
 }
 async function resizeChartsAfterLayout(): Promise<void> {
+  // 全屏或设置面板改变布局后，通知所有子图表重新计算尺寸。
   await nextTick()
   chartRefs.value.forEach((item) => item.resize())
   window.setTimeout(() => chartRefs.value.forEach((item) => item.resize()), 320)
@@ -566,6 +572,7 @@ function formatPace(value: number | null): string {
 watch([() => props.modelValue, () => props.activity?.id], ([open]) => {
   if (open) loadTrack()
 })
+// 将用户的图表选择、坐标轴模式和个人区间持久化到当前浏览器。
 watch(
   enabledSummaryMetrics,
   (value) => localStorage.setItem('running-webgis-summary-metrics', JSON.stringify(value)),
@@ -578,10 +585,12 @@ watch(
   { deep: true },
 )
 onMounted(() => document.addEventListener('keydown', handleKeydown))
+// 组件销毁时移除 Escape 快捷键监听。
 onBeforeUnmount(() => document.removeEventListener('keydown', handleKeydown))
 </script>
 
 <template>
+  <!-- Teleport 将弹窗挂到 body，避免被父级布局或 overflow 裁剪。 -->
   <Teleport to="body">
     <Transition name="detail-fade">
       <div v-if="modelValue" class="detail-overlay" @mousedown.self="close">

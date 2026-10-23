@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 活动档案页：负责筛选、分页和把用户选中的活动通知给父组件。
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 
@@ -15,6 +16,7 @@ interface Activity {
 }
 
 const emit = defineEmits<{ open: [activity: Activity] }>()
+// 表格数据、总数和分页状态都是响应式的，会驱动模板自动刷新。
 const rows = ref<Activity[]>([])
 const total = ref(0)
 const loading = ref(false)
@@ -49,6 +51,7 @@ async function search(resetPage = false): Promise<void> {
     limit: String(pageSize),
     offset: String((page.value - 1) * pageSize),
   })
+  // 只有有值的筛选条件才加入请求，避免覆盖后端默认查询行为。
   if (filters.dates) {
     query.set('start', filters.dates[0])
     query.set('end', filters.dates[1])
@@ -78,10 +81,12 @@ function reset(): void {
   search(true)
 }
 
+// 页面第一次显示时加载第一页活动。
 onMounted(() => search())
 </script>
 
 <template>
+  <!-- 顶部是筛选工具栏，下方是结果表格和分页器。 -->
   <section class="explorer-page">
     <div class="explorer-heading">
       <div>

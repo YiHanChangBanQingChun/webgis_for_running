@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 地图探索页使用 Leaflet 显示按网格聚合的路线访问热度。
 import L from 'leaflet'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -39,6 +40,7 @@ function formatKm(value: number): string {
 }
 function initializeMap(): void {
   if (!container.value || map) return
+  // 地图实例只初始化一次；后续请求只更新热度图层。
   map = L.map(container.value, {
     zoomControl: true,
     attributionControl: true,
@@ -99,6 +101,7 @@ function fitAll(): void {
   if (bounds.isValid()) map.fitBounds(bounds, { padding: [28, 28], maxZoom: 14 })
 }
 async function load(): Promise<void> {
+  // 根据日期和最少经过次数请求新的空间网格数据。
   loading.value = true
   try {
     const query = new URLSearchParams({ min_visits: String(minVisits.value) })
@@ -136,11 +139,13 @@ onMounted(() => {
   if (container.value) observer.observe(container.value)
   load()
 })
+// 主题变化只需要刷新地图尺寸，底图和数据不必重新请求。
 watch(
   () => props.dark,
   () => nextTick(() => map?.invalidateSize({ animate: false })),
 )
 onBeforeUnmount(() => {
+  // 断开尺寸监听并销毁 Leaflet，避免离开页面后残留地图事件。
   observer.disconnect()
   map?.remove()
 })

@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
 
 /* 全局设计令牌：浅色主题的颜色、阴影和字体由各组件复用。 */
+/* 全局视觉基础：颜色变量、布局、Element Plus 覆盖和响应式规则。 */
 :root {
   font-family: Manrope, 'Microsoft YaHei', sans-serif;
   font-synthesis: none;

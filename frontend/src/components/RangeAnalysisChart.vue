@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// 训练分析图表：根据 mode 在周里程柱状图和滚动负荷折线图之间切换。
 import * as echarts from 'echarts'
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
@@ -25,7 +26,7 @@ const container = ref<HTMLElement>()
 let chart: echarts.ECharts | undefined
 
 function palette() {
-  // 主题色
+  // 集中管理明暗主题下会重复使用的颜色。
   return {
     text: props.dark ? '#9ca9bd' : '#738096',
     line: props.dark ? '#2c3648' : '#e4e9f0',
@@ -33,7 +34,7 @@ function palette() {
   }
 }
 function render(): void {
-  // 如果容器不存在，直接返回
+  // 组件尚未挂载时没有 DOM 容器，不能初始化 ECharts。
   if (!container.value) return
   chart ??= echarts.init(container.value)
   const colors = palette()
@@ -57,6 +58,7 @@ function render(): void {
     },
   }
   if (props.mode === 'volume') {
+    // volume 模式展示每周训练里程。
     chart.setOption(
       {
         ...base,
@@ -89,6 +91,7 @@ function render(): void {
       true,
     )
   } else {
+    // load 模式对比 7 日和 28 日滚动负荷。
     chart.setOption(
       {
         ...base,
@@ -140,7 +143,9 @@ onMounted(async () => {
   render()
   if (container.value) observer.observe(container.value)
 })
+// 任一图表输入变化时重新生成配置。
 watch(() => [props.daily, props.weekly, props.dark, props.mode], render, { deep: true })
+// 释放图表资源，避免切换页面后继续监听窗口尺寸。
 onBeforeUnmount(() => {
   observer.disconnect()
   chart?.dispose()

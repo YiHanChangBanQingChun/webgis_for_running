@@ -1,3 +1,4 @@
+// 区域探索的纯数据处理函数：不依赖 Vue 或 Cesium，便于单独测试和复用。
 import type {
   BuildingCollection,
   BuildingRecord,
@@ -14,6 +15,7 @@ function finite(value: unknown): value is number {
 }
 
 function distanceMeters(a: RoutePoint, b: RoutePoint): number {
+  // 使用 Haversine 公式计算两经纬度点之间的球面距离。
   const deltaLatitude = (b.latitude - a.latitude) * RADIANS
   const deltaLongitude = (b.longitude - a.longitude) * RADIANS
   const h =
@@ -29,6 +31,7 @@ function distanceMeters(a: RoutePoint, b: RoutePoint): number {
  * 不采用设备海拔：建筑与路线统一放在椭球面附近，避免未经校正的海拔使路线悬空。
  */
 export function prepareTrack(collection: TrackCollection): PreparedTrack {
+  // 将 GeoJSON 轨迹整理为带有连续时间、距离和运动指标的标准点数组。
   const feature = collection.features.find((item) => item.geometry?.type === 'LineString')
   if (!feature) throw new Error('轨迹中没有 LineString。')
 
@@ -95,6 +98,7 @@ export function prepareTrack(collection: TrackCollection): PreparedTrack {
 
 /** 二分查找当前时刻，再在相邻点间插值；GPS 采样不均匀时也能平滑回放。 */
 export function sampleTrack(track: PreparedTrack, seconds: number): RoutePoint {
+  // 找到当前时间所在的两个采样点，并在它们之间做线性插值。
   const { points } = track
   const time = Math.max(0, Math.min(seconds, track.durationSeconds))
   let low = 0
@@ -126,6 +130,7 @@ export function simplifyForDisplay(points: RoutePoint[], limit = 1200): RoutePoi
 }
 
 export function prepareBuildings(collection: BuildingCollection): BuildingRecord[] {
+  // 从建筑 GeoJSON 提取包围盒中心和可用高度，供附近筛选和三维挤出使用。
   return collection.features.flatMap((feature) => {
     if (!['Polygon', 'MultiPolygon'].includes(feature.geometry?.type)) return []
     const polygons =
@@ -177,6 +182,7 @@ export function filterNearbyBuildings(
   track: PreparedTrack,
   radius: number,
 ): BuildingRecord[] {
+  // 先按网格建立候选线段索引，再进行精确的点到线段距离判断。
   const origin = track.points[0]!
   const scaleX = EARTH_RADIUS * RADIANS * Math.cos(origin.latitude * RADIANS)
   const scaleY = EARTH_RADIUS * RADIANS
