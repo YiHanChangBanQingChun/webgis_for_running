@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { fetchAllActivities } from './activityApi'
 import DistanceTrend from './components/DistanceTrend.vue'
@@ -7,7 +7,9 @@ import ActivityExplorer from './components/ActivityExplorer.vue'
 import ActivityDetailModal from './components/ActivityDetailModal.vue'
 import TrainingAnalysis from './components/TrainingAnalysis.vue'
 import MapExplorer from './components/MapExplorer.vue'
-import RegionExplorer from './components/RegionExplorer.vue'
+
+// Cesium 体积较大，进入区域探索时再加载，避免拖慢原有训练总览。
+const RegionExplorer = defineAsyncComponent(() => import('./components/RegionExplorer.vue'))
 
 type ThemePreference = 'system' | 'light' | 'dark'
 type View = 'overview' | 'activities' | 'analysis' | 'map' | 'region'
@@ -142,9 +144,13 @@ const monthLabel = computed(() => {
 })
 const viewTitle = computed(
   () =>
-    ({ overview: '训练总览', activities: '活动记录', analysis: '训练分析', map: '地图探索', region: '区域探索' })[
-      activeView.value
-    ],
+    ({
+      overview: '训练总览',
+      activities: '活动记录',
+      analysis: '训练分析',
+      map: '地图探索',
+      region: '区域探索',
+    })[activeView.value],
 )
 
 // 始终补足为 6 × 7 个单元格，避免不同月份使日历面板高度跳动。
@@ -511,10 +517,7 @@ watch(selectedMonth, loadMonthlyStats)
           :start-date="report?.data_coverage.date_range.start"
           :end-date="report?.data_coverage.date_range.end"
         />
-        <RegionExplorer
-          v-else-if="activeView === 'region'"
-          :dark="resolvedTheme === 'dark'"
-        />
+        <RegionExplorer v-else-if="activeView === 'region'" />
         <el-alert
           v-if="apiError"
           class="api-alert"

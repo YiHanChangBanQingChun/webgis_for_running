@@ -9,12 +9,7 @@ const apiProxyTarget = process.env.VITE_API_PROXY_TARGET ?? 'http://127.0.0.1:80
 const cesiumSource = 'node_modules/cesium/Build/Cesium'
 const cesiumBaseUrl = 'cesium'
 
-const cesiumStaticFolders = [
-  'Workers',
-  'ThirdParty',
-  'Assets',
-  'Widgets',
-] as const
+const cesiumStaticFolders = ['Workers', 'ThirdParty', 'Assets', 'Widgets'] as const
 
 export default defineConfig({
   define: {
