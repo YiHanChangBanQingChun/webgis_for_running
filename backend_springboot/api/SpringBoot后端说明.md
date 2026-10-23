@@ -2,7 +2,9 @@
 
 ## 1. 子项目定位
 
-本目录是原 FastAPI 查询服务的 Spring Boot 迁移版本。它使用 **Java 25、Spring Boot 4.1.1、Maven Wrapper、Spring MVC、Jackson 3、Validation 与 Actuator**。
+本目录是原 FastAPI 查询服务的 Spring Boot 迁移版本。它使用 **Java 21、Spring Boot 4.1.1、Maven Wrapper、Spring MVC、Jackson 3、Validation 与 Actuator**。
+
+初学者建议先读[代码阅读指南](docs/代码阅读指南.md)，再沿 Controller → Service → Repository 阅读实现；指南同时解释常见注解、数据流和重构后的计算步骤。
 
 系统仍采用“离线处理 + 在线只读查询”的边界：
 
@@ -44,13 +46,15 @@ Spring Boot 不会修改上述文件。Python 重新生成文件后，Repository
 
 ```text
 api/
-├── pom.xml                              Maven 配置，Java 25 / Spring Boot 4.1.1
+├── pom.xml                              Maven 配置，Java 21 / Spring Boot 4.1.1
 ├── mvnw / mvnw.cmd                      Maven Wrapper，无需单独安装 Maven
 ├── SpringBoot后端说明.md                 本文档
+├── docs/代码阅读指南.md                  初学者阅读顺序、注解与调用链说明
 └── src/
     ├── main/
     │   ├── java/dev/runningatlas/api/
     │   │   ├── RunningWebgisApiApplication.java
+    │   │   ├── package-info.java           包级职责与推荐阅读顺序
     │   │   ├── activity/
     │   │   │   ├── ActivityController.java
     │   │   │   ├── ActivityService.java
@@ -73,9 +77,12 @@ api/
     │   │       ├── DataReadinessService.java
     │   │       └── JsonValues.java
     │   └── resources/application.properties
-    └── test/java/dev/runningatlas/api/
-        ├── RunningWebgisApiApplicationTests.java
-        └── activity/ActivityRepositoryTests.java
+    └── test/
+        ├── java/dev/runningatlas/api/
+        │   ├── RunningWebgisApiApplicationTests.java
+        │   ├── ServiceRegressionTests.java
+        │   └── activity/ActivityRepositoryTests.java
+        └── resources/service-responses.json    重构前人工样本的接口响应
 ```
 
 ### 3.1 各层职责
@@ -90,7 +97,17 @@ api/
 
 ## 4. 运行环境
 
-升级流程已安装 JDK 25：
+当前项目的编译版本以 `pom.xml` 为准，要求 JDK 21 或可编译 Java 21 的更高版本。
+在 macOS / Linux 中先执行：
+
+```bash
+java -version
+javac -version
+./mvnw --version
+```
+
+后续 Windows 路径是历史机器的配置示例，不能直接用于当前 macOS 环境。
+历史 Windows 环境曾安装 JDK 25：
 
 ```text
 C:\Users\admin\.jdks\openjdk-25\jdk-25.0.2
@@ -103,14 +120,14 @@ java -version
 javac -version
 ```
 
-两者应显示 25。如果 VS Code 终端仍使用旧 JDK，可只为当前终端设置：
+两者应满足当前项目的 Java 21 编译要求。如果 Windows 的 VS Code 终端仍使用旧 JDK，可只为当前终端设置（以下仍以历史 JDK 25 路径为例）：
 
 ```powershell
 $env:JAVA_HOME = 'C:\Users\admin\.jdks\openjdk-25\jdk-25.0.2'
 $env:Path = "$env:JAVA_HOME\bin;$env:Path"
 ```
 
-建议在 VS Code 命令面板运行 `Java: Configure Java Runtime`，将该项目运行时也选为 JDK 25。
+建议在 VS Code 命令面板运行 `Java: Configure Java Runtime`，为项目选择已安装且满足要求的 JDK。
 
 ## 5. 开发运行方式
 
