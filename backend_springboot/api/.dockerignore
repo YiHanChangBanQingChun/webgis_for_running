@@ -1,0 +1,9 @@
+**
+!Dockerfile
+!pom.xml
+!mvnw
+!.mvn/
+!.mvn/**
+!src/
+!src/**
+**/.DS_Store

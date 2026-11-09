@@ -1,0 +1,56 @@
+# 迁移用：只使用已构建的镜像，无需源代码构建上下文。
+name: running-webgis-fullstack
+
+services:
+  api:
+    image: running-webgis-backend:${API_IMAGE_TAG:-1.0}
+    environment:
+      RUNNING_WEBGIS_DATA_DIR: /data/processed
+    expose:
+      - "8000"
+    volumes:
+      - type: bind
+        source: ${WEBGIS_DATA_DIR:-./sample/processed}
+        target: /data/processed
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3).read()"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    image: running-webgis-frontend:${WEB_IMAGE_TAG:-1.0}
+    ports:
+      - "127.0.0.1:${WEB_PORT:-18080}:80"
+    volumes:
+      - type: bind
+        source: ${WEBGIS_BUILDINGS_DIR:-./sample/cesium-data}
+        target: /usr/share/nginx/html/cesium-data
+        read_only: true
+        bind:
+          create_host_path: false
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
