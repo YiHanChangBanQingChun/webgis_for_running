@@ -16,3 +16,4 @@ __pycache__/
 *.fit
 *.sqlite3
 data/.import-lock/
+pages/

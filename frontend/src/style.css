@@ -331,6 +331,52 @@ button {
   overflow: hidden;
 }
 
+.public-notice {
+  min-height: 54px;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  background: var(--glass);
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.mobile-navigation {
+  display: none;
+}
+.public-notice span {
+  flex: 1;
+}
+.public-notice button {
+  flex-shrink: 0;
+  padding: 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.public-demo .dashboard {
+  flex: 1;
+  height: auto;
+}
+@media (max-width: 760px) {
+  .public-notice {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+  .public-notice span {
+    flex-basis: 100%;
+  }
+  .public-demo .dashboard {
+    height: auto;
+    min-height: calc(100vh - 200px);
+  }
+}
+
 .welcome-strip {
   min-width: 0;
   padding: 17px 24px;
@@ -944,6 +990,25 @@ button {
     display: none;
   }
 
+  .mobile-navigation {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    padding: 0 8px 8px;
+  }
+  .mobile-navigation button {
+    padding: 9px 4px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    color: var(--text);
+    background: var(--glass);
+    cursor: pointer;
+  }
+  .mobile-navigation button.active {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
   .topbar {
     height: auto;
     margin: 8px;
@@ -996,6 +1061,28 @@ button {
 
   .calendar-panel {
     height: 440px;
+  }
+
+  .day-cell {
+    padding: 4px;
+  }
+  .day-data {
+    left: 4px;
+    bottom: 6px;
+  }
+  .day-data strong {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .day-data small {
+    display: none;
+  }
+  .day-cell > i {
+    top: 3px;
+    right: 3px;
+    min-width: 12px;
+    height: 12px;
+    font-size: 7px;
   }
 
   .right-stack {

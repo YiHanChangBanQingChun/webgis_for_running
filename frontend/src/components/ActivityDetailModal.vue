@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { apiFetch } from '../dataClient'
 // 活动详情弹窗：读取单次活动的轨迹指标，并管理图表、分区和个人设置。
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ActivityMap from './ActivityMap.vue'
@@ -509,9 +510,9 @@ async function loadTrack(): Promise<void> {
   try {
     // 轨迹、训练洞察和个人阈值彼此独立，使用并行请求缩短弹窗打开时间。
     const [response, insightsResponse, profileResponse] = await Promise.all([
-      fetch(`/api/activities/${props.activity.id}/track`),
-      fetch(`/api/activities/${props.activity.id}/insights`),
-      fetch('/api/athlete-profile'),
+      apiFetch(`/api/activities/${props.activity.id}/track`),
+      apiFetch(`/api/activities/${props.activity.id}/insights`),
+      apiFetch('/api/athlete-profile'),
     ])
     if (!response.ok) throw new Error('track unavailable')
     const data = (await response.json()) as {

@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
+    "build:pages": "vue-tsc -b && vite build --mode pages --outDir ../pages --emptyOutDir",
+    "test:static": "node --test tests/staticData.test.ts",
     "preview": "vite preview",
     "test:region": "node --test tests/regionGeometry.test.ts",
     "format": "prettier --write \"src/**/*.{vue,ts,css}\" \"tests/**/*.ts\" \"docs/**/*.md\" \"{index.html,package.json,vite.config.ts}\"",

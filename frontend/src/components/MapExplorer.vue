@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { apiFetch } from '../dataClient'
+import { demoManifest, isStaticDemo } from '../siteConfig'
 // 地图探索页使用 Leaflet 显示按网格聚合的路线访问热度。
 import L from 'leaflet'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -19,7 +21,9 @@ const props = defineProps<{ dark: boolean; startDate?: string | null; endDate?: 
 const container = ref<HTMLElement>()
 const loading = ref(false)
 const data = ref<HeatCollection | null>(null)
-const dates = ref<[string, string] | null>(null)
+const dates = ref<[string, string] | null>(
+  isStaticDemo ? [demoManifest.default_range.start, demoManifest.default_range.end] : null,
+)
 const minVisits = ref(1)
 // Leaflet 图层由其自身管理，不放入 Vue 响应式状态，销毁时统一清理。
 let map: L.Map | undefined
@@ -109,7 +113,7 @@ async function load(): Promise<void> {
       query.set('start', dates.value[0])
       query.set('end', dates.value[1])
     }
-    const response = await fetch(`/api/map/heat-grid?${query}`)
+    const response = await apiFetch(`/api/map/heat-grid?${query}`)
     if (!response.ok) throw new Error('spatial grid unavailable')
     data.value = (await response.json()) as HeatCollection
     renderGrid()

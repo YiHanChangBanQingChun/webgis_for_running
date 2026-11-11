@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { apiFetch } from './dataClient'
+import { demoManifest, isStaticDemo } from './siteConfig'
 // `script setup` 中声明的变量和函数可以直接在下面的模板中使用。
 import { computed, defineAsyncComponent, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -15,6 +17,13 @@ const RegionExplorer = defineAsyncComponent(() => import('./components/RegionExp
 // 用联合类型限制主题和页面的可选值，避免传入拼写错误的字符串。
 type ThemePreference = 'system' | 'light' | 'dark'
 type View = 'overview' | 'activities' | 'analysis' | 'map' | 'region'
+const navigationViews = [
+  { id: 'overview', label: '总览' },
+  { id: 'activities', label: '活动' },
+  { id: 'analysis', label: '分析' },
+  { id: 'map', label: '地图' },
+  { id: 'region', label: '三维' },
+] as const
 
 // 一条活动记录的字段类型，与后端返回的数据结构对应。
 interface Activity {
@@ -226,7 +235,7 @@ function shiftMonth(offset: number): void {
 // 读取当前月份的详细统计；统计接口失败时保留日历计算出的基础数据。
 async function loadMonthlyStats(): Promise<void> {
   try {
-    const response = await fetch(
+    const response = await apiFetch(
       `/api/stats/monthly?month=${encodeURIComponent(selectedMonth.value)}`,
     )
     if (!response.ok) throw new Error('Monthly stats unavailable')
@@ -246,7 +255,7 @@ async function openDay(cell: CalendarCell): Promise<void> {
   try {
     dayActivities.value = await fetchAllActivities<Activity>({ start: cell.date, end: cell.date })
   } catch {
-    ElMessage.error('无法读取当天活动，请检查后端服务。')
+    ElMessage.error('无法读取当天活动，请检查数据加载状态。')
   } finally {
     dayLoading.value = false
   }
@@ -260,19 +269,20 @@ async function loadDashboard(): Promise<void> {
     // 三个接口相互独立，同时请求以缩短首页首次加载时间。
     const [activityData, calendarResponse, reportResponse] = await Promise.all([
       fetchAllActivities<Activity>(),
-      fetch('/api/calendar'),
-      fetch('/api/quality-report'),
+      apiFetch('/api/calendar'),
+      apiFetch('/api/quality-report'),
     ])
     if (!calendarResponse.ok || !reportResponse.ok) throw new Error('API unavailable')
     activities.value = activityData
     calendar.value = (await calendarResponse.json()) as CalendarRow[]
     report.value = (await reportResponse.json()) as QualityReport
     const latestDate = calendar.value.at(-1)?.date
-    if (latestDate) selectedMonth.value = latestDate.slice(0, 7)
+    if (isStaticDemo) selectedMonth.value = demoManifest.default_month
+    else if (latestDate) selectedMonth.value = latestDate.slice(0, 7)
     await loadMonthlyStats()
   } catch {
     apiError.value = true
-    ElMessage.info('后端尚未连接，当前显示页面框架。')
+    ElMessage.info('数据尚未加载，当前显示页面框架。')
   } finally {
     loading.value = false
   }
@@ -281,6 +291,11 @@ async function loadDashboard(): Promise<void> {
 // 切换左侧导航对应的主视图。
 function chooseView(view: View): void {
   activeView.value = view
+}
+
+function showPublishedMonth(month: string): void {
+  selectedMonth.value = month
+  chooseView('overview')
 }
 
 // 打开活动详情抽屉。
@@ -360,7 +375,7 @@ watch(selectedMonth, loadMonthlyStats)
     </aside>
 
     <!-- 主区域包含顶部工具栏和当前页面内容。 -->
-    <el-container class="main-shell">
+    <el-container class="main-shell" :class="{ 'public-demo': isStaticDemo }">
       <!-- 顶部工具栏：显示标题、月份选择器、刷新按钮和主题切换。 -->
       <header class="topbar glass-bar">
         <div>
@@ -399,6 +414,23 @@ watch(selectedMonth, loadMonthlyStats)
         </div>
       </header>
 
+      <nav class="mobile-navigation" aria-label="移动主导航">
+        <button
+          v-for="view in navigationViews"
+          :key="view.id"
+          :class="{ active: activeView === view.id }"
+          @click="chooseView(view.id)"
+        >
+          {{ view.label }}
+        </button>
+      </nav>
+
+      <div v-if="isStaticDemo" class="public-notice">
+        <span>{{ demoManifest.coverage_note }}</span>
+        <button @click="showPublishedMonth(demoManifest.default_month)">两周训练</button>
+        <button @click="showPublishedMonth('2026-11')">两场半马</button>
+      </div>
+
       <!-- v-if / v-else-if 根据 activeView 只渲染当前选中的页面。 -->
       <main class="dashboard" :class="{ 'explorer-dashboard': activeView !== 'overview' }">
         <template v-if="activeView === 'overview'">
@@ -409,7 +441,7 @@ watch(selectedMonth, loadMonthlyStats)
               <h2>稳定积累，让每一步都有迹可循。</h2>
             </div>
             <div class="month-highlight">
-              <span>本月里程</span>
+              <span>{{ isStaticDemo ? '当月公开里程' : '本月里程' }}</span>
               <strong>{{ (displayMonthDistance / 1000).toFixed(1) }}</strong>
               <small>km</small>
             </div>

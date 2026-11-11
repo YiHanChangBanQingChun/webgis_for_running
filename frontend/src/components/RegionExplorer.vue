@@ -12,6 +12,7 @@ const {
   selectedActivityId,
   selectedActivity,
   selectedBuilding,
+  buildingScope,
   radius,
   heightScale,
   showBuildings,
@@ -36,6 +37,7 @@ const {
   togglePlayback,
   seek,
   overview,
+  locateGuangzhou,
   loadActivities,
   loadBuildings,
 } = useRegionExplorer(container)
@@ -49,7 +51,7 @@ const {
       <header>
         <p class="eyebrow">CITY RUNNING THEATER</p>
         <h2>在城市之间，重走一次跑步</h2>
-        <p class="intro">把配速、心率与沿途建筑放回同一段三维旅程。</p>
+        <p class="intro">回放真实跑步轨迹，也可以独立探索广州建筑片区。</p>
       </header>
 
       <label class="control-label" for="region-activity">
@@ -102,11 +104,23 @@ const {
       <p class="hint">颜色是固定数值分组，不代表个人训练强度区间。</p>
 
       <div class="section-heading">
-        <h3>沿线建筑</h3>
-        <el-switch v-model="showBuildings" aria-label="显示沿线建筑" />
+        <h3>广州三维建筑</h3>
+        <el-switch v-model="showBuildings" aria-label="显示广州建筑" />
       </div>
-      <label class="control-label" for="region-radius">探索距离</label>
-      <el-select id="region-radius" v-model="radius" aria-label="沿线建筑探索距离">
+      <el-select v-model="buildingScope" aria-label="建筑展示范围">
+        <el-option label="广州片区 · 独立展示" value="region" />
+        <el-option label="仅当前轨迹附近" value="nearby" />
+      </el-select>
+      <el-button :disabled="!totalBuildings" @click="locateGuangzhou">定位广州建筑</el-button>
+      <label v-if="buildingScope === 'nearby'" class="control-label" for="region-radius">
+        探索距离
+      </label>
+      <el-select
+        v-if="buildingScope === 'nearby'"
+        id="region-radius"
+        v-model="radius"
+        aria-label="沿线建筑探索距离"
+      >
         <el-option :value="100" label="轨迹两侧 100 m" />
         <el-option :value="250" label="轨迹两侧 250 m" />
         <el-option :value="500" label="轨迹两侧 500 m" />
@@ -114,7 +128,7 @@ const {
       <div class="building-stats" aria-live="polite">
         <div>
           <strong>{{ loadingBuildings ? '…' : buildingStats.count }}</strong>
-          <span>沿线建筑</span>
+          <span>{{ buildingScope === 'region' ? '片区建筑' : '沿线建筑' }}</span>
         </div>
         <div>
           <strong>{{ buildingStats.maximum.toFixed(0) }} m</strong>
@@ -143,11 +157,16 @@ const {
       </p>
       <p
         v-if="
-          track && totalBuildings && !loadingBuildings && !buildingStats.count && !buildingError
+          buildingScope === 'nearby' &&
+          track &&
+          totalBuildings &&
+          !loadingBuildings &&
+          !buildingStats.count &&
+          !buildingError
         "
         class="feedback"
       >
-        这段轨迹附近没有广州建筑记录；可扩大距离或换一条轨迹。
+        这段轨迹附近没有广州建筑记录；可切换独立展示并定位广州。
       </p>
       <div v-if="buildingError" class="feedback" role="alert">
         {{ buildingError }}
@@ -169,8 +188,8 @@ const {
       <p class="method-note">
         建筑源
         {{ totalBuildings.toLocaleString() }}
-        个面。按建筑包围盒中心至完整轨迹的近似距离筛选；无地形，建筑底部统一为椭球高 0 m，轨迹抬高 5
-        m 便于辨识。
+        个面。独立模式展示整个片区，沿线模式按建筑中心至轨迹的近似距离筛选。无地形，建筑底部统一为椭球高
+        0 m，轨迹抬高 5 m 便于辨识。
       </p>
     </aside>
 
@@ -233,7 +252,8 @@ const {
             <input v-model="following" type="checkbox" :disabled="!track" />
             跟随跑者
           </label>
-          <button :disabled="!track" @click="overview">全程俯瞰</button>
+          <button :disabled="!track" @click="overview">定位当前路线</button>
+          <button :disabled="!totalBuildings" @click="locateGuangzhou">定位广州</button>
           <small>
             {{
               track?.usedTimeFallback

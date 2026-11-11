@@ -1,3 +1,5 @@
+import { apiFetch } from '../../dataClient'
+import { assetUrl, demoManifest, isStaticDemo } from '../../siteConfig'
 // 区域探索 composable：连接界面状态、接口请求、轨迹动画和 Cesium 场景。
 import { computed, onBeforeUnmount, onMounted, ref, shallowRef, watch } from 'vue'
 import type { Ref } from 'vue'
@@ -38,6 +40,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   const selectedActivityId = ref('')
   const selectedBuilding = ref<BuildingSelection | null>(null)
   const radius = ref(500)
+  const buildingScope = ref<'region' | 'nearby'>(isStaticDemo ? 'region' : 'nearby')
   const heightScale = ref(1)
   const showBuildings = ref(true)
   const onlineBasemap = ref(false)
@@ -124,11 +127,23 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     scene?.overview()
   }
 
+  function locateGuangzhou(): void {
+    pause()
+    following.value = false
+    buildingScope.value = 'region'
+    scene?.locateBuildings(allBuildings)
+  }
+
   async function updateCorridor(): Promise<void> {
     // 半径或轨迹变化后重新筛选附近建筑，并更新三维建筑图层。
     const version = ++corridorVersion
-    if (!track.value || !scene) return
-    nearbyBuildings.value = filterNearbyBuildings(allBuildings, track.value, radius.value)
+    if (!scene) return
+    nearbyBuildings.value =
+      buildingScope.value === 'region'
+        ? allBuildings
+        : track.value
+          ? filterNearbyBuildings(allBuildings, track.value, radius.value)
+          : []
     loadingBuildings.value = true
     try {
       await scene.setBuildings(nearbyBuildings.value, heightScale.value, showBuildings.value)
@@ -153,9 +168,9 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     const request = trackRequest
     corridorVersion += 1
     scene?.clearRoute()
-    scene?.clearBuildings()
+    if (buildingScope.value === 'nearby') scene?.clearBuildings()
     track.value = null
-    nearbyBuildings.value = []
+    if (buildingScope.value === 'nearby') nearbyBuildings.value = []
     selectedBuilding.value = null
     following.value = false
     elapsed.value = 0
@@ -164,7 +179,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     loadingBuildings.value = false
 
     try {
-      const response = await fetch(`/api/activities/${encodeURIComponent(id)}/track`, {
+      const response = await apiFetch(`/api/activities/${encodeURIComponent(id)}/track`, {
         signal: request.signal,
       })
       if (!response.ok) throw new Error(`轨迹接口返回 ${response.status}`)
@@ -174,7 +189,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
       scene?.setRoute(track.value, colorMode.value)
       scene?.updateRunner(track.value.points[0]!, false)
       overview()
-      void updateCorridor()
+      if (buildingScope.value === 'nearby') void updateCorridor()
     } catch (error) {
       if (!disposed && !request.signal.aborted) {
         console.error(error)
@@ -199,12 +214,15 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
       if (!activities.value.length) {
         activityError.value = '当前没有含 GPS 的正式跑步活动。'
       } else if (!activities.value.some((item) => item.id === selectedActivityId.value)) {
-        selectedActivityId.value = activities.value[0]!.id
+        selectedActivityId.value =
+          (isStaticDemo &&
+            activities.value.find((item) => item.id === demoManifest.default_activity_id)?.id) ||
+          activities.value[0]!.id
       }
     } catch (error) {
       if (!disposed) {
         console.error(error)
-        activityError.value = '活动列表读取失败，请确认后端服务已启动。'
+        activityError.value = '活动列表读取失败，请刷新页面后重试。'
       }
     } finally {
       if (!disposed) loadingActivities.value = false
@@ -216,9 +234,16 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     buildingError.value = ''
     loadingBuildings.value = true
     try {
-      const response = await fetch('/cesium-data/guangzhou-buildings.geojson', {
-        signal: lifetime.signal,
-      })
+      const response = await fetch(
+        assetUrl(
+          isStaticDemo
+            ? 'data/guangzhou-buildings.geojson'
+            : 'cesium-data/guangzhou-buildings.geojson',
+        ),
+        {
+          signal: lifetime.signal,
+        },
+      )
       if (!response.ok) throw new Error(`建筑文件返回 ${response.status}`)
       const data = (await response.json()) as BuildingCollection
       if (disposed) return
@@ -238,7 +263,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
   watch(selectedActivityId, (id) => {
     if (id) void loadTrack(id)
   })
-  watch(radius, () => {
+  watch([radius, buildingScope], () => {
     void updateCorridor()
   })
   watch([heightScale, showBuildings], () =>
@@ -312,6 +337,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     selectedActivityId,
     selectedActivity,
     selectedBuilding,
+    buildingScope,
     radius,
     heightScale,
     showBuildings,
@@ -336,6 +362,7 @@ export function useRegionExplorer(container: Ref<HTMLDivElement | undefined>) {
     togglePlayback,
     seek,
     overview,
+    locateGuangzhou,
     loadActivities,
     loadBuildings,
   }

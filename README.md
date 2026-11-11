@@ -53,6 +53,8 @@ archive/windows/          旧Windows启动器，仅作历史存档
 
 ## 文档与验证
 
+GitHub Pages 展示版的公开数据范围、构建与发布方式见 [Pages 说明](docs/github-pages.md)。
+
 [文档索引](docs/README.md) · [macOS迁移与回滚](docs/macos-migration.md) · [数据处理说明](backend/README.md) · [训练复盘](docs/2026-10-09-training-review.md) · [整理记录](docs/cleanup-2026-10-09.md)
 
 ```bash

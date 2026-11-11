@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { apiFetch } from '../dataClient'
 // 活动轨迹地图：加载 GeoJSON 路线，并提供进度拖动和自动回放。
 import L from 'leaflet'
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -133,7 +134,7 @@ async function renderTrack(): Promise<void> {
   unavailable.value = false
   sliderIndex.value = 0
   try {
-    const response = await fetch(`/api/activities/${props.activityId}/track`)
+    const response = await apiFetch(`/api/activities/${props.activityId}/track`)
     if (!response.ok) throw new Error('track unavailable')
     const geojson = (await response.json()) as GeoJSON.FeatureCollection<
       GeoJSON.LineString,

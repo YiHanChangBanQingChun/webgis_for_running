@@ -1,3 +1,4 @@
+import { apiFetch } from './dataClient'
 // 活动接口相关的请求工具，供多个页面复用。
 /**
  * 后端活动接口采用分页；这里依次读取所有页，避免概览页在记录变多后被静默截断。
@@ -15,7 +16,7 @@ export async function fetchAllActivities<T>(
       limit: String(pageSize),
       offset: String(items.length),
     })
-    const response = await fetch(`/api/activities?${params}`, { signal })
+    const response = await apiFetch(`/api/activities?${params}`, { signal })
     if (!response.ok) throw new Error('Activity API unavailable')
     const page = (await response.json()) as { total: number; items: T[] }
     // 空页面但总数仍未完成，说明分页数据不完整，应显式报错而不是静默返回。

@@ -11,29 +11,35 @@ const cesiumBaseUrl = 'cesium'
 
 const cesiumStaticFolders = ['Workers', 'ThirdParty', 'Assets', 'Widgets'] as const
 
-export default defineConfig({
-  define: {
-    CESIUM_BASE_URL: JSON.stringify(`/${cesiumBaseUrl}/`),
-  },
-
-  plugins: [
-    vue(),
-
-    viteStaticCopy({
-      targets: cesiumStaticFolders.map((folder) => ({
-        src: `${cesiumSource}/${folder}/**/*`,
-        dest: cesiumBaseUrl,
-
-        // 去除 node_modules/cesium/Build/Cesium 四层前缀，
-        // 保留 Assets、Workers 等目录及其内部子目录。
-        rename: { stripBase: 4 },
-      })),
-    }),
-  ],
-
-  server: {
-    proxy: {
-      '/api': apiProxyTarget,
+export default defineConfig(({ mode }) => {
+  const pages = mode === 'pages'
+  const base = pages ? '/webgis_for_running/' : '/'
+  return {
+    base,
+    publicDir: pages ? 'public-demo' : 'public',
+    define: {
+      CESIUM_BASE_URL: JSON.stringify(`${base}${cesiumBaseUrl}/`),
     },
-  },
+
+    plugins: [
+      vue(),
+
+      viteStaticCopy({
+        targets: cesiumStaticFolders.map((folder) => ({
+          src: `${cesiumSource}/${folder}/**/*`,
+          dest: cesiumBaseUrl,
+
+          // 去除 node_modules/cesium/Build/Cesium 四层前缀，
+          // 保留 Assets、Workers 等目录及其内部子目录。
+          rename: { stripBase: 4 },
+        })),
+      }),
+    ],
+
+    server: {
+      proxy: {
+        '/api': apiProxyTarget,
+      },
+    },
+  }
 })

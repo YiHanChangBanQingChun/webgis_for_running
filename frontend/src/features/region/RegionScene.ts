@@ -192,6 +192,24 @@ export class RegionScene {
     })
   }
 
+  locateBuildings(records: BuildingRecord[]): void {
+    if (!records.length) return
+    this.setFollowing(false)
+    const sphere = Cesium.BoundingSphere.fromPoints(
+      records.map((record) =>
+        Cesium.Cartesian3.fromDegrees(record.longitude, record.latitude, record.height),
+      ),
+    )
+    this.viewer.camera.flyToBoundingSphere(sphere, {
+      duration: 0.8,
+      offset: new Cesium.HeadingPitchRange(
+        Cesium.Math.toRadians(-20),
+        Cesium.Math.toRadians(-48),
+        Math.max(1500, sphere.radius * 3),
+      ),
+    })
+  }
+
   async setBuildings(records: BuildingRecord[], scale: number, show: boolean): Promise<void> {
     // GeoJSON 加载是异步的，因此用版本号确保旧请求不会覆盖新场景。
     const version = ++this.buildingVersion

@@ -6,9 +6,9 @@ import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 interface DailyPoint {
   date: string
   distance_m: number
-  relative_load: number
-  load_7d: number
-  load_28d: number
+  relative_load: number | null
+  load_7d: number | null
+  load_28d: number | null
 }
 interface WeeklyPoint {
   week: string

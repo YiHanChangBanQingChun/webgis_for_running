@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { apiFetch } from '../dataClient'
 // 活动档案页：负责筛选、分页和把用户选中的活动通知给父组件。
 import { onMounted, reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -61,13 +62,13 @@ async function search(resetPage = false): Promise<void> {
   if (filters.distance) query.set('min_distance_km', filters.distance)
   loading.value = true
   try {
-    const response = await fetch(`/api/activities?${query}`)
+    const response = await apiFetch(`/api/activities?${query}`)
     if (!response.ok) throw new Error('query failed')
     const result = (await response.json()) as { total: number; items: Activity[] }
     rows.value = result.items
     total.value = result.total
   } catch {
-    ElMessage.error('活动查询失败，请检查 FastAPI 服务。')
+    ElMessage.error('活动查询失败，请刷新后重试。')
   } finally {
     loading.value = false
   }

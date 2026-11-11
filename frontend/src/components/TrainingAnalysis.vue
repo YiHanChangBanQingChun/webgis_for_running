@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { apiFetch } from '../dataClient'
+import { demoManifest, isStaticDemo } from '../siteConfig'
 // 训练分析页负责选择统计范围，并把接口结果交给指标卡和图表组件。
 import { computed, onMounted, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -10,9 +12,9 @@ interface DailyPoint {
   activity_count: number
   distance_m: number
   elapsed_s: number
-  relative_load: number
-  load_7d: number
-  load_28d: number
+  relative_load: number | null
+  load_7d: number | null
+  load_28d: number | null
   load_ratio: number | null
 }
 interface WeeklyPoint {
@@ -56,6 +58,11 @@ function shiftDate(value: string, days: number): string {
 function usePreset(days: number): void {
   // 以最新活动日期为结束点，计算最近 N 天的起止日期。
   preset.value = days
+  if (isStaticDemo && days === 14) {
+    dates.value = [demoManifest.default_range.start, demoManifest.default_range.end]
+    void load()
+    return
+  }
   const end = props.latestDate || new Date().toISOString().slice(0, 10)
   dates.value = [shiftDate(end, -(days - 1)), end]
   load()
@@ -110,12 +117,12 @@ async function load(): Promise<void> {
   loading.value = true
   try {
     const query = new URLSearchParams({ start: dates.value[0], end: dates.value[1] })
-    const response = await fetch(`/api/stats/range?${query}`)
+    const response = await apiFetch(`/api/stats/range?${query}`)
     if (!response.ok) throw new Error('range stats unavailable')
     // 这是类型断言，不会在运行时校验 JSON；接口变更时应同时更新前后端约定。
     result.value = (await response.json()) as RangeResult
   } catch {
-    ElMessage.error('训练分析读取失败，请确认 FastAPI 已更新并正常运行。')
+    ElMessage.error('训练分析读取失败，请刷新页面后重试。')
   } finally {
     loading.value = false
   }
@@ -127,11 +134,11 @@ function handleDateChange(): void {
 watch(
   () => props.latestDate,
   (value) => {
-    if (value && !dates.value[1]) usePreset(90)
+    if (value && !dates.value[1]) usePreset(isStaticDemo ? 14 : 90)
   },
 )
 // 默认进入页面时显示最近 90 天。
-onMounted(() => usePreset(90))
+onMounted(() => usePreset(isStaticDemo ? 14 : 90))
 </script>
 
 <template>
@@ -141,12 +148,19 @@ onMounted(() => usePreset(90))
       <div>
         <p class="eyebrow">TRAINING RHYTHM</p>
         <h2>训练分析</h2>
-        <span>用自己的近期基线观察训练量变化</span>
+        <span>
+          {{
+            isStaticDemo
+              ? '公开两周内的真实训练记录；28 日基线不足'
+              : '用自己的近期基线观察训练量变化'
+          }}
+        </span>
       </div>
       <div class="analysis-controls glass-card">
         <el-segmented
           :model-value="preset"
           :options="[
+            ...(isStaticDemo ? [{ label: '公开两周', value: 14 }] : []),
             { label: '30 天', value: 30 },
             { label: '90 天', value: 90 },
             { label: '半年', value: 180 },
