@@ -1,0 +1,252 @@
+{
+  "monthly" : {
+    "month" : "2026-10",
+    "activity_count" : 3,
+    "active_days" : 3,
+    "total_distance_m" : 28000.0,
+    "total_elapsed_s" : 14800.0,
+    "average_distance_m" : 9333.33,
+    "average_pace_s_per_km" : 528.57,
+    "total_ascent_m" : 20.0,
+    "activities_with_gps" : 2,
+    "sport_counts" : {
+      "hiking" : 1,
+      "running" : 2
+    }
+  },
+  "range" : {
+    "start" : "2026-10-01",
+    "end" : "2026-10-07",
+    "summary" : {
+      "activity_count" : 2,
+      "active_days" : 2,
+      "total_distance_m" : 13000.0,
+      "total_elapsed_s" : 4800.0,
+      "total_ascent_m" : 20.0,
+      "calories" : 500.0,
+      "average_pace_s_per_km" : 369.23,
+      "average_distance_m" : 6500.0,
+      "load_ratio" : 2.92,
+      "load_status" : "high"
+    },
+    "daily" : [ {
+      "date" : "2026-10-01",
+      "activity_count" : 1,
+      "distance_m" : 10000.0,
+      "elapsed_s" : 3600.0,
+      "total_ascent_m" : 20.0,
+      "calories" : 500.0,
+      "average_heart_rate" : 160.0,
+      "relative_load" : 68.27,
+      "load_7d" : 98.27,
+      "load_28d" : 98.27,
+      "load_ratio" : 4.0
+    }, {
+      "date" : "2026-10-02",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 98.27,
+      "load_28d" : 98.27,
+      "load_ratio" : 4.0
+    }, {
+      "date" : "2026-10-03",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 98.27,
+      "load_28d" : 98.27,
+      "load_ratio" : 4.0
+    }, {
+      "date" : "2026-10-04",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 98.27,
+      "load_28d" : 98.27,
+      "load_ratio" : 4.0
+    }, {
+      "date" : "2026-10-05",
+      "activity_count" : 1,
+      "distance_m" : 3000.0,
+      "elapsed_s" : 1200.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 13.0,
+      "load_7d" : 81.27,
+      "load_28d" : 111.27,
+      "load_ratio" : 2.92
+    }, {
+      "date" : "2026-10-06",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 81.27,
+      "load_28d" : 111.27,
+      "load_ratio" : 2.92
+    }, {
+      "date" : "2026-10-07",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 81.27,
+      "load_28d" : 111.27,
+      "load_ratio" : 2.92
+    } ],
+    "weekly" : [ {
+      "week" : "2026-09-28",
+      "activity_count" : 1,
+      "distance_m" : 10000.0,
+      "elapsed_s" : 3600.0,
+      "relative_load" : 68.27
+    }, {
+      "week" : "2026-10-05",
+      "activity_count" : 1,
+      "distance_m" : 3000.0,
+      "elapsed_s" : 1200.0,
+      "relative_load" : 13.0
+    } ],
+    "load_note" : "仅统计正式跑步；相对负荷基于时长与平均心率，不是 COROS 负荷。混合／排除活动与其他运动保留在活动列表。"
+  },
+  "empty" : {
+    "start" : "2027-01-01",
+    "end" : "2027-01-02",
+    "summary" : {
+      "activity_count" : 0,
+      "active_days" : 0,
+      "total_distance_m" : 0.0,
+      "total_elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_pace_s_per_km" : null,
+      "average_distance_m" : null,
+      "load_ratio" : null,
+      "load_status" : "insufficient"
+    },
+    "daily" : [ {
+      "date" : "2027-01-01",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 0.0,
+      "load_28d" : 0.0,
+      "load_ratio" : null
+    }, {
+      "date" : "2027-01-02",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "total_ascent_m" : 0.0,
+      "calories" : 0.0,
+      "average_heart_rate" : null,
+      "relative_load" : 0.0,
+      "load_7d" : 0.0,
+      "load_28d" : 0.0,
+      "load_ratio" : null
+    } ],
+    "weekly" : [ {
+      "week" : "2026-12-28",
+      "activity_count" : 0,
+      "distance_m" : 0.0,
+      "elapsed_s" : 0.0,
+      "relative_load" : 0.0
+    } ],
+    "load_note" : "仅统计正式跑步；相对负荷基于时长与平均心率，不是 COROS 负荷。混合／排除活动与其他运动保留在活动列表。"
+  },
+  "activities" : {
+    "total" : 4,
+    "items" : [ {
+      "id" : "excluded",
+      "date" : "2026-10-01",
+      "sport" : "running",
+      "distance_m" : 7000,
+      "elapsed_s" : 2000,
+      "training_excluded" : true
+    }, {
+      "id" : "history",
+      "date" : "2026-09-28",
+      "start_time" : "2026-09-28T08:00:00",
+      "sport" : "running",
+      "distance_m" : 5000,
+      "elapsed_s" : 1800,
+      "average_heart_rate" : 150,
+      "has_gps" : true
+    } ]
+  },
+  "insights" : {
+    "activity_id" : "run",
+    "pace_cv_percent" : 2.6,
+    "heart_rate_drift_percent" : 12.4,
+    "stopped_ratio_percent" : 7.5,
+    "training_type" : "节奏变化跑",
+    "splits" : [ {
+      "kilometer" : 1,
+      "pace_s_per_km" : 322.1,
+      "average_heart_rate" : 140.0,
+      "average_altitude_m" : 6.0
+    }, {
+      "kilometer" : 2,
+      "pace_s_per_km" : 321.7,
+      "average_heart_rate" : 148.0,
+      "average_altitude_m" : 18.5
+    }, {
+      "kilometer" : 3,
+      "pace_s_per_km" : 321.7,
+      "average_heart_rate" : 160.0,
+      "average_altitude_m" : 31.0
+    }, {
+      "kilometer" : 4,
+      "pace_s_per_km" : 322.6,
+      "average_heart_rate" : 160.0,
+      "average_altitude_m" : 38.5
+    } ],
+    "notes" : {
+      "heart_rate_drift" : "比较前后半程速度/心率效率变化，仅作为训练观察。",
+      "classification" : "由配速波动与低速占比自动推测，可与实际训练内容不同。"
+    }
+  },
+  "grid" : {
+    "type" : "FeatureCollection",
+    "cell_size_m" : 250,
+    "feature_count" : 1,
+    "features" : [ {
+      "type" : "Feature",
+      "geometry" : {
+        "type" : "Point",
+        "coordinates" : [ 113.3, 23.1 ]
+      },
+      "properties" : {
+        "cell_id" : "sample",
+        "visits" : 2,
+        "distance_m" : 223.5,
+        "first_date" : "2026-10-01",
+        "last_date" : "2026-10-02"
+      }
+    } ]
+  }
+}

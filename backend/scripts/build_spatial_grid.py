@@ -5,14 +5,14 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import sys
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-PROJECT_ROOT = Path(__file__).resolve().parents[2]
-PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
-TRACKS_DIR = PROCESSED_DIR / "tracks"
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from app.paths import PROCESSED_DIR, TRACKS_DIR
 ACTIVITIES_PATH = PROCESSED_DIR / "activities.json"
 OUTPUT_PATH = PROCESSED_DIR / "spatial-grid.json"
 EARTH_RADIUS_M = 6_378_137.0

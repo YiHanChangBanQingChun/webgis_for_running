@@ -1,0 +1,7 @@
+.env
+.env.*
+!.env.example
+sample/
+export-*/
+*.tar
+*.tar.gz

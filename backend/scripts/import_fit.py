@@ -9,7 +9,7 @@ from pathlib import Path
 BACKEND_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(BACKEND_DIR))
 
-from app.fit_archive import archive_fit_file, archive_fitdecode_file, write_json  # noqa: E402
+from app.fit_archive import archive_fit_file, archive_fitdecode_file, sha256_file, write_json  # noqa: E402
 from app.paths import DEFAULT_FIT_SOURCE, FULL_ACTIVITIES_DIR, PROCESSED_DIR, ensure_processed_directories  # noqa: E402
 
 
@@ -33,11 +33,9 @@ def main() -> None:
     for index, fit_path in enumerate(files, start=1):
         target = FULL_ACTIVITIES_DIR / f"{fit_path.stem}.full.json"
         if target.exists() and not args.force:
-            if not args.repair_partial:
-                skipped += 1
-                continue
             existing = __import__("json").loads(target.read_text(encoding="utf-8"))
-            if existing.get("parse", {}).get("status") != "partial_or_failed":
+            unchanged = existing.get("source", {}).get("sha256") == sha256_file(fit_path)
+            if unchanged and (not args.repair_partial or existing.get("parse", {}).get("status") != "partial_or_failed"):
                 skipped += 1
                 continue
         archive = archive_fit_file(fit_path, source)

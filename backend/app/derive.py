@@ -4,11 +4,29 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 from typing import Any
 
 from .fit_archive import write_json
+from .paths import DATA_DIR
+
+CN = timezone(timedelta(hours=8))
+
+def timestamp_with_evidence(message: dict[str, Any], field: str) -> tuple[str | None, str]:
+    value = message.get("fields", {}).get(field)
+    parsed = _as_datetime(value)
+    if parsed is None:
+        return value, "unknown"
+    if parsed.tzinfo:
+        return parsed.isoformat(), "explicit_offset"
+    metadata = message.get("field_metadata", {}).get(field, {})
+    # FIT date_time is UTC by specification; local_date_time is deliberately excluded.
+    # https://developer.garmin.com/fit/articles/cookbook/datetime.html
+    field_type = str(metadata.get("type", metadata.get("field_type", "")))
+    if "date_time" in field_type and "local_date_time" not in field_type:
+        return parsed.replace(tzinfo=timezone.utc).isoformat(), "fit_date_time_UTC"
+    return value, "unknown_timezone_retained_original"
 
 SEMICIRCLES_PER_DEGREE = 2**31 / 180
 TRACK_SERIES_FIELDS = (
@@ -40,7 +58,8 @@ def _as_iso_date(value: Any) -> str | None:
     if not isinstance(value, str):
         return None
     try:
-        return datetime.fromisoformat(value.replace("Z", "+00:00")).date().isoformat()
+        parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return (parsed.astimezone(CN) if parsed.tzinfo else parsed).date().isoformat()
     except ValueError:
         return value[:10] if len(value) >= 10 else None
 
@@ -59,7 +78,14 @@ def activity_summary(archive: dict[str, Any]) -> dict[str, Any]:
     sessions = _messages_by_type(archive, "session")
     session = sessions[0] if sessions else {}
     records = _messages_by_type(archive, "record")
-    start_time = session.get("start_time") or (records[0].get("timestamp") if records else None)
+    session_message = next((m for m in archive["messages"] if m["message_type"] == "session"), None)
+    record_message = next((m for m in archive["messages"] if m["message_type"] == "record"), None)
+    if session_message and session.get("start_time"):
+        start_time, time_evidence = timestamp_with_evidence(session_message, "start_time")
+    elif record_message:
+        start_time, time_evidence = timestamp_with_evidence(record_message, "timestamp")
+    else:
+        start_time, time_evidence = None, "unknown"
     distance_m = _number(session.get("total_distance"))
     elapsed_s = _number(session.get("total_elapsed_time"))
     avg_speed = _number(session.get("enhanced_avg_speed") or session.get("avg_speed"))
@@ -87,6 +113,8 @@ def activity_summary(archive: dict[str, Any]) -> dict[str, Any]:
         "parse_error": archive["parse"]["error"],
         "date": _as_iso_date(start_time),
         "start_time": start_time,
+        "timezone_evidence": time_evidence,
+        "original_start_time": session.get("start_time") or (records[0].get("timestamp") if records else None),
         "sport": session.get("sport"),
         "sub_sport": session.get("sub_sport"),
         "distance_m": distance_m,
@@ -151,7 +179,7 @@ def calendar_rows(activities: list[dict[str, Any]]) -> list[dict[str, Any]]:
         {
             "date": day,
             "activity_count": len(items),
-            "distance_m": sum(item["distance_m"] or 0 for item in items),
+            "distance_m": sum(item["distance_m"] or 0 for item in items if not item.get("training_excluded", False)),
             "elapsed_s": sum(item["elapsed_s"] or 0 for item in items),
             "calories": sum(item["calories"] or 0 for item in items),
             "activity_ids": [item["id"] for item in items],
@@ -163,10 +191,14 @@ def calendar_rows(activities: list[dict[str, Any]]) -> list[dict[str, Any]]:
 def build_derived_files(full_dir: Path, processed_dir: Path, tracks_dir: Path) -> dict[str, int]:
     """从归档批量生成页面派生数据。"""
     activities: list[dict[str, Any]] = []
+    override_path = DATA_DIR / "activity-overrides.json"
+    overrides = json.loads(override_path.read_text(encoding="utf-8")) if override_path.exists() else {}
     track_count = 0
     for archive_path in sorted(full_dir.glob("*.full.json")):
         archive = json.loads(archive_path.read_text(encoding="utf-8"))
         summary = activity_summary(archive)
+        summary.update(overrides.get(str(summary["id"]), {}))
+        summary["include_in_running_stats"] = summary["sport"] == "running" and not summary.get("training_excluded", False)
         activities.append(summary)
         track = activity_track(archive, summary)
         if track:

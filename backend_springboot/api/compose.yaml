@@ -1,0 +1,31 @@
+name: running-webgis-springboot
+services:
+  api:
+    build:
+      context: .
+    image: running-webgis-springboot:${SPRING_IMAGE_TAG:-1.0}
+    environment:
+      RUNNING_WEBGIS_DATA_DIR: /data/processed
+      SERVER_ADDRESS: 0.0.0.0
+      SERVER_PORT: "8000"
+    ports:
+      - "127.0.0.1:${SPRING_API_PORT:-18001}:8000"
+    volumes:
+      - type: bind
+        source: ${SPRING_DATA_DIR:-../../deployment/web/sample/processed}
+        target: /data/processed
+        read_only: true
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "--max-time", "3", "http://127.0.0.1:8000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"

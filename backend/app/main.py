@@ -209,7 +209,7 @@ def monthly_stats(
 ) -> dict[str, Any]:
     """汇总指定月份的训练指标，供首页月度卡片使用。"""
     _assert_ready()
-    rows = [row for row in _activities() if row["date"] and row["date"].startswith(month)]
+    rows = [row for row in _activities() if row["date"] and row["date"].startswith(month) and not row.get("training_excluded", False)]
     total_distance = sum(row["distance_m"] or 0 for row in rows)
     total_elapsed = sum(row["elapsed_s"] or 0 for row in rows)
     active_days = len({row["date"] for row in rows})
@@ -233,7 +233,11 @@ def range_stats(
     start: Annotated[str, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")],
     end: Annotated[str, Query(pattern=r"^\d{4}-\d{2}-\d{2}$")],
 ) -> dict[str, Any]:
-    """日期范围统计与个人滚动训练负荷；负荷是相对观察指标，不是医疗建议。"""
+    """日期范围统计与个人滚动训练负荷；负荷是相对观察指标，不是医疗建议。
+
+    返回的每日序列会从查询起始日前 27 天开始，以便在起始日计算完整的
+    7 日和 28 日滚动负荷；`daily` 对外仍只暴露请求范围内的日期。
+    """
     _assert_ready()
     start_date, end_date = date.fromisoformat(start), date.fromisoformat(end)
     if start_date > end_date:
@@ -241,22 +245,27 @@ def range_stats(
     if (end_date - start_date).days > 1095:
         raise HTTPException(status_code=422, detail="单次统计范围不能超过三年。")
 
+    # 负荷窗口需要查询范围前的历史数据作为预热，否则起始几天的滚动值会偏低。
     history_start = start_date - timedelta(days=27)
-    rows = [row for row in _activities() if row.get("date") and history_start.isoformat() <= row["date"] <= end]
+    rows = [row for row in _activities() if row.get("date") and history_start.isoformat() <= row["date"] <= end
+            and row.get("sport") == "running" and not row.get("training_excluded", False)]
     by_day: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in rows:
         by_day[row["date"]].append(row)
 
+    # 逐日补齐没有活动的日期，保证前端图表的时间轴连续。
     daily: list[dict[str, Any]] = []
     cursor = history_start
     while cursor <= end_date:
         key = cursor.isoformat()
         items = by_day.get(key, [])
         elapsed = sum(float(item.get("elapsed_s") or 0) for item in items)
+        # 有心率的活动按时长加权，避免短活动对当天平均心率产生过大影响。
         weighted_hr_seconds = sum(float(item.get("average_heart_rate") or 0) * float(item.get("elapsed_s") or 0) for item in items if item.get("average_heart_rate"))
         hr_seconds = sum(float(item.get("elapsed_s") or 0) for item in items if item.get("average_heart_rate"))
         average_hr = weighted_hr_seconds / hr_seconds if hr_seconds else None
         duration_minutes = elapsed / 60
+        # 没有平均心率时使用固定的保守系数；该值用于相对比较，不代表设备官方负荷。
         relative_load = duration_minutes * ((average_hr / 150) ** 2 if average_hr else .65)
         daily.append({
             "date": key,
@@ -270,14 +279,24 @@ def range_stats(
         })
         cursor += timedelta(days=1)
 
+    # 7 日负荷用于观察短期训练量，28 日负荷用于建立较长周期基线。
     loads = [item["relative_load"] for item in daily]
+    # daily 形如：
+    # daily = [
+    # {"date": "10-01", "relative_load": 10},
+    # {"date": "10-02", "relative_load": 20},
+    # {"date": "10-03", "relative_load": 30},
+    # ]
     for index, item in enumerate(daily):
+        # 根据当前日期的位置 index，从 loads 列表中截取最近 7 天（前 6 天加当天）的负荷数据，求和并保留两位小数，然后保存为当前日期的 load_7d。
         item["load_7d"] = round(sum(loads[max(0, index - 6):index + 1]), 2)
         load_28d = sum(loads[max(0, index - 27):index + 1])
         item["load_28d"] = round(load_28d, 2)
+        # 数据不足四周时按实际覆盖周数折算，避免把初期基线人为压低。
         baseline_week = load_28d / min(4, (index + 1) / 7) if load_28d else 0
         item["load_ratio"] = round(item["load_7d"] / baseline_week, 2) if baseline_week else None
 
+    # 周统计按周一归属，并且只汇总用户请求的可见日期范围。
     visible = [item for item in daily if item["date"] >= start]
     weekly_map: dict[str, dict[str, Any]] = {}
     for item in visible:
@@ -288,6 +307,7 @@ def range_stats(
             bucket[field] += item[field]
     weekly = [{**item, "distance_m": round(item["distance_m"], 2), "elapsed_s": round(item["elapsed_s"], 2), "relative_load": round(item["relative_load"], 2)} for item in weekly_map.values()]
 
+    # 汇总只统计请求范围内的正式跑步活动；预热数据仅参与滚动负荷计算。
     selected_rows = [row for row in rows if start <= row["date"] <= end]
     total_distance = sum(float(row.get("distance_m") or 0) for row in selected_rows)
     total_elapsed = sum(float(row.get("elapsed_s") or 0) for row in selected_rows)
@@ -295,6 +315,7 @@ def range_stats(
     current_ratio = visible[-1]["load_ratio"] if visible else None
     load_status = "insufficient"
     if current_ratio is not None:
+        # 状态阈值与前端展示保持一致：低于 .75 为恢复，超过 1.5 为偏高。
         load_status = "recovery" if current_ratio < .75 else "balanced" if current_ratio <= 1.25 else "rising" if current_ratio <= 1.5 else "high"
     return {
         "start": start,
@@ -313,7 +334,7 @@ def range_stats(
         },
         "daily": visible,
         "weekly": weekly,
-        "load_note": "相对负荷基于训练时长和平均心率构建，仅用于观察个人训练变化。",
+        "load_note": "仅统计正式跑步；相对负荷基于时长与平均心率，不是 COROS 负荷。混合／排除活动与其他运动保留在活动列表。",
     }
 
 
